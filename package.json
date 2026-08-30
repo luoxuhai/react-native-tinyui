@@ -1,7 +1,7 @@
 {
   "name": "react-native-tinyui",
   "version": "0.1.0",
-  "description": "react-native-tinyui",
+  "description": "Dependency-free native iOS Menu and Popover components for React Native",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
@@ -15,17 +15,9 @@
   "files": [
     "src",
     "lib",
-    "android",
     "ios",
-    "cpp",
     "*.podspec",
-    "react-native.config.js",
     "!ios/build",
-    "!android/build",
-    "!android/gradle",
-    "!android/gradlew",
-    "!android/gradlew.bat",
-    "!android/local.properties",
     "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__",
@@ -33,7 +25,7 @@
   ],
   "scripts": {
     "example": "yarn workspace react-native-tinyui-example",
-    "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
+    "clean": "del-cli example/ios/build lib",
     "prepare": "bob build",
     "typecheck": "tsc",
     "release": "release-it --only-version",
@@ -43,7 +35,9 @@
   "keywords": [
     "react-native",
     "ios",
-    "android"
+    "menu",
+    "popover",
+    "fabric"
   ],
   "repository": {
     "type": "git",
@@ -109,16 +103,16 @@
     ]
   },
   "codegenConfig": {
-    "name": "TinyuiViewSpec",
+    "name": "TinyuiSpec",
     "type": "all",
     "jsSrcsDir": "src",
-    "android": {
-      "javaPackageName": "com.tinyui"
-    },
     "ios": {
       "components": {
-        "TinyuiView": {
-          "className": "TinyuiView"
+        "TinyuiMenuView": {
+          "className": "TinyuiMenuView"
+        },
+        "TinyuiPopoverView": {
+          "className": "TinyuiPopoverView"
         }
       }
     }
@@ -162,15 +156,5 @@
       "<rootDir>/example/node_modules",
       "<rootDir>/lib/"
     ]
-  },
-  "create-react-native-library": {
-    "type": "fabric-view",
-    "languages": "kotlin-objc",
-    "tools": [
-      "release-it",
-      "eslint",
-      "jest"
-    ],
-    "version": "0.63.0"
   }
 }
