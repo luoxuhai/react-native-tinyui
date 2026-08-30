@@ -1,0 +1,1 @@
+export { TinyuiView } from './TinyuiView';
