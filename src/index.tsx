@@ -1,22 +1,23 @@
 export { Menu } from './Menu';
 export type {
-  MenuContentProps,
-  MenuDividerProps,
-  MenuItemProps,
+  MenuActionOption,
+  MenuDividerOption,
   MenuItemState,
+  MenuOption,
   MenuProps,
-  MenuSectionProps,
-  MenuSubmenuProps,
-  MenuTriggerProps,
+  MenuSectionOption,
+  MenuSubmenuOption,
 } from './Menu.types';
 
-export { Popover } from './Popover';
+export { Popover, PopoverClose } from './Popover';
 export type {
   PopoverArrowEdge,
   PopoverAttachmentAnchor,
   PopoverCloseProps,
-  PopoverContentProps,
+  PopoverContent,
+  PopoverContentRenderArgs,
   PopoverProps,
-  PopoverSize,
-  PopoverTriggerProps,
 } from './Popover.types';
+
+export { getNativeTinyui, assertComponentEnabled } from './getNativeTinyui';
+export type { TinyuiComponent } from './getNativeTinyui';

@@ -1,9 +1,9 @@
 import type {
   ComponentRef,
   ForwardRefExoticComponent,
-  ReactNode,
   RefAttributes,
 } from 'react';
+import type { ReactNode } from 'react';
 import type { PressableProps, View, ViewProps } from 'react-native';
 
 export type PopoverAttachmentAnchor =
@@ -12,13 +12,23 @@ export type PopoverAttachmentAnchor =
 export type PopoverArrowEdge =
   'leading' | 'trailing' | 'top' | 'bottom' | 'none';
 
-export interface PopoverSize {
-  width: number;
-  height: number;
+/** Arguments passed to a render-function `content`. */
+export interface PopoverContentRenderArgs {
+  /** Dismisses the popover. */
+  close: () => void;
 }
 
+export type PopoverContent =
+  ReactNode | ((args: PopoverContentRenderArgs) => ReactNode);
+
 export interface PopoverProps extends Omit<ViewProps, 'children'> {
+  /** The trigger element. Tapping it opens the popover. */
   children: ReactNode;
+  /**
+   * Content shown inside the popover. Pass a node, or a render function that
+   * receives `{ close }` to dismiss the popover from within the content.
+   */
+  content: PopoverContent;
   /** Controlled presentation state. */
   open?: boolean;
   /** Initial state when `open` is not controlled. */
@@ -26,28 +36,14 @@ export interface PopoverProps extends Omit<ViewProps, 'children'> {
   onOpenChange?: (open: boolean) => void;
   attachmentAnchor?: PopoverAttachmentAnchor;
   arrowEdge?: PopoverArrowEdge;
-  /** Explicit native popover size. Defaults to 320 × 240 points. */
-  contentSize?: PopoverSize;
 }
-
-export interface PopoverTriggerProps extends PressableProps {
-  children: PressableProps['children'];
-}
-
-export interface PopoverContentProps extends Omit<ViewProps, 'children'> {
-  children: ReactNode;
-}
-
-export interface PopoverCloseProps extends PressableProps {
-  children: PressableProps['children'];
-}
-
-export type PopoverMarkerComponent<Props> = (props: Props) => ReactNode;
 
 export interface PopoverComponent extends ForwardRefExoticComponent<
   PopoverProps & RefAttributes<ComponentRef<typeof View>>
-> {
-  Trigger: PopoverMarkerComponent<PopoverTriggerProps>;
-  Content: PopoverMarkerComponent<PopoverContentProps>;
-  Close: (props: PopoverCloseProps) => ReactNode;
+> {}
+
+/** Props for the `Popover.Close` helper button. */
+export interface PopoverCloseProps extends PressableProps {
+  /** Dismisses the popover. Pass the `close` callback from the content render args. */
+  close: () => void;
 }

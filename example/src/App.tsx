@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Menu, Popover } from 'react-native-tinyui';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Menu, Popover, PopoverClose } from 'react-native-tinyui';
 
 export default function App() {
   const [lastAction, setLastAction] = useState('No action selected');
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.safeArea}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        contentInsetAdjustmentBehavior="automatic"
+      >
         <Text style={styles.eyebrow}>REACT NATIVE · NATIVE iOS</Text>
         <Text style={styles.title}>TinyUI</Text>
         <Text style={styles.subtitle}>
@@ -17,80 +20,84 @@ export default function App() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Menu</Text>
           <Text style={styles.body}>{lastAction}</Text>
-          <Menu style={styles.control}>
-            <Menu.Trigger accessibilityLabel="Open document actions">
-              <View style={styles.primaryButton}>
-                <Text style={styles.primaryButtonText}>Document actions</Text>
-                <Text style={styles.chevron}>⌄</Text>
-              </View>
-            </Menu.Trigger>
-            <Menu.Content>
-              <Menu.Item
-                systemImage="square.and.pencil"
-                onSelect={() => setLastAction('Rename selected')}
-              >
-                Rename
-              </Menu.Item>
-              <Menu.Item
-                systemImage="doc.on.doc"
-                onSelect={() => setLastAction('Duplicate selected')}
-              >
-                Duplicate
-              </Menu.Item>
-              <Menu.Submenu title="Share" systemImage="square.and.arrow.up">
-                <Menu.Item
-                  systemImage="link"
-                  onSelect={() => setLastAction('Copy link selected')}
-                >
-                  Copy link
-                </Menu.Item>
-                <Menu.Item
-                  systemImage="person.2"
-                  onSelect={() => setLastAction('Invite people selected')}
-                >
-                  Invite people
-                </Menu.Item>
-              </Menu.Submenu>
-              <Menu.Divider />
-              <Menu.Item
-                destructive
-                systemImage="trash"
-                onSelect={() => setLastAction('Delete selected')}
-              >
-                Delete
-              </Menu.Item>
-            </Menu.Content>
+          <Menu
+            accessibilityLabel="Open document actions"
+            options={[
+              {
+                title: 'Rename',
+                systemImage: 'square.and.pencil',
+                onSelect: () => setLastAction('Rename selected'),
+              },
+              {
+                title: 'Duplicate',
+                systemImage: 'doc.on.doc',
+                state: 'on',
+                onSelect: () => setLastAction('Duplicate selected'),
+              },
+              {
+                type: 'submenu',
+                title: 'Share',
+                systemImage: 'square.and.arrow.up',
+                options: [
+                  {
+                    title: 'Copy link',
+                    systemImage: 'link',
+                    onSelect: () => setLastAction('Copy link selected'),
+                  },
+                  {
+                    title: 'Invite people',
+                    systemImage: 'person.2',
+                    onSelect: () => setLastAction('Invite people selected'),
+                  },
+                ],
+              },
+              { type: 'divider' },
+              {
+                title: 'Delete',
+                destructive: true,
+                systemImage: 'trash',
+                onSelect: () => setLastAction('Delete selected'),
+              },
+            ]}
+            style={styles.control}
+          >
+            <View style={styles.primaryButton}>
+              <Text style={styles.primaryButtonText}>Document actions</Text>
+              <Text style={styles.chevron}>⌄</Text>
+            </View>
           </Menu>
         </View>
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Popover</Text>
           <Text style={styles.body}>
-            The trigger, content, and close action stay declarative.
+            The trigger is children; the content is a prop.
           </Text>
           <Popover
-            attachmentAnchor="bottom"
+            attachmentAnchor="leading"
             arrowEdge="top"
-            contentSize={{ width: 320, height: 196 }}
+            // eslint-disable-next-line react/no-unstable-nested-components -- render-prop, not a component definition
+            content={({ close }) => (
+              <View style={styles.popoverContent}>
+                <Text style={styles.popoverTitle}>Built for React Native</Text>
+                <Text style={styles.popoverBody}>
+                  The popover is a real UIPopoverPresentationController, while
+                  its body remains a normal React Native view tree.
+                </Text>
+                <PopoverClose close={close} style={styles.closeButton}>
+                  <Text style={styles.closeButtonText}>Done</Text>
+                </PopoverClose>
+              </View>
+            )}
             style={styles.control}
           >
-            <Popover.Trigger style={styles.secondaryButton}>
+            <View style={styles.secondaryButton}>
               <Text style={styles.secondaryButtonText}>Show details</Text>
-            </Popover.Trigger>
-            <Popover.Content style={styles.popoverContent}>
-              <Text style={styles.popoverTitle}>Built for React Native</Text>
-              <Text style={styles.popoverBody}>
-                The popover is a real UIPopoverPresentationController, while its
-                body remains a normal React Native view tree.
-              </Text>
-              <Popover.Close style={styles.closeButton}>
-                <Text style={styles.closeButtonText}>Done</Text>
-              </Popover.Close>
-            </Popover.Content>
+            </View>
           </Popover>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -165,8 +172,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   secondaryButton: {
+    width: 200,
     minHeight: 50,
     borderRadius: 15,
+    marginLeft: 100,
     borderWidth: 1,
     borderColor: '#D8D8E0',
     alignItems: 'center',
@@ -180,6 +189,8 @@ const styles = StyleSheet.create({
   popoverContent: {
     padding: 22,
     justifyContent: 'center',
+    width: 100,
+    height: 100,
   },
   popoverTitle: {
     color: '#17171B',
@@ -201,7 +212,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#6E6BFF',
   },
   closeButtonText: {
-    color: '#FFFFFF',
     fontWeight: '700',
   },
 });

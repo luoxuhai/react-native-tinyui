@@ -1,56 +1,52 @@
 import { forwardRef, type ComponentRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
+import { assertComponentEnabled } from './getNativeTinyui';
 import type { MenuComponent, MenuProps } from './Menu.types';
-import {
-  MenuContent,
-  MenuDivider,
-  MenuItem,
-  MenuSection,
-  MenuSubmenu,
-  MenuTrigger,
-  parseMenu,
-  textFromNode,
-} from './MenuPrimitives';
 import NativeMenuView from './MenuNativeComponent';
+import { serializeMenuOptions } from './MenuOptions';
 
 const MenuRoot = forwardRef<ComponentRef<typeof View>, MenuProps>(function Menu(
-  { children, onPrimaryAction, ...viewProps },
+  {
+    accessibilityLabel,
+    children,
+    disabled,
+    onPrimaryAction,
+    options,
+    testID,
+    ...viewProps
+  },
   ref
 ) {
-  const { trigger, config, callbacks } = parseMenu(children);
-  const accessibilityLabel =
-    trigger.accessibilityLabel ?? textFromNode(trigger.children);
+  assertComponentEnabled('Menu');
+
+  const { config, callbacks } = serializeMenuOptions(options);
 
   return (
     <View {...viewProps} ref={ref} collapsable={false}>
-      <View
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        pointerEvents="none"
-        style={trigger.style}
-      >
-        {trigger.children}
-      </View>
       <NativeMenuView
         accessibilityLabel={accessibilityLabel}
-        disabled={trigger.disabled}
+        disabled={disabled}
         hasPrimaryAction={onPrimaryAction != null}
         menuConfig={config}
         onItemPress={(event) => callbacks.get(event.nativeEvent.id)?.()}
         onPrimaryAction={onPrimaryAction}
-        style={StyleSheet.absoluteFill}
-        testID={trigger.testID}
-      />
+        testID={testID}
+      >
+        <View collapsable={false}>{children}</View>
+      </NativeMenuView>
     </View>
   );
 });
 
-export const Menu = Object.assign(MenuRoot, {
-  Trigger: MenuTrigger,
-  Content: MenuContent,
-  Item: MenuItem,
-  Submenu: MenuSubmenu,
-  Section: MenuSection,
-  Divider: MenuDivider,
-}) as MenuComponent;
+export const Menu = MenuRoot as MenuComponent;
+
+export type {
+  MenuActionOption,
+  MenuDividerOption,
+  MenuItemState,
+  MenuOption,
+  MenuProps,
+  MenuSectionOption,
+  MenuSubmenuOption,
+} from './Menu.types';

@@ -4,39 +4,28 @@ import type {
   ReactNode,
   RefAttributes,
 } from 'react';
-import type { StyleProp, View, ViewProps, ViewStyle } from 'react-native';
+import type { ColorValue, View, ViewProps } from 'react-native';
 
 export type MenuItemState = 'off' | 'on' | 'mixed';
 
-export interface MenuProps extends Omit<ViewProps, 'children'> {
-  /** The trigger and content declarations for this menu. */
-  children: ReactNode;
-  /** Called on a normal tap. When set, a long press opens the menu. */
-  onPrimaryAction?: () => void;
-}
-
-export interface MenuTriggerProps {
-  children: ReactNode;
-  /** VoiceOver label for the transparent native menu control. */
-  accessibilityLabel?: string;
-  disabled?: boolean;
-  style?: StyleProp<ViewStyle>;
-  testID?: string;
-}
-
-export interface MenuContentProps {
-  children: ReactNode;
-}
-
-export interface MenuItemProps {
-  /** Stable identifier returned by the native selection event. */
-  id?: string;
-  /** Text shown by iOS. Falls back to string children. */
-  title?: string;
-  children?: ReactNode;
+interface MenuOptionLabel {
+  title: string;
   subtitle?: string;
   /** SF Symbol name. */
   systemImage?: string;
+  /** Image name from the containing app's asset catalog. Takes precedence over `systemImage`. */
+  icon?: string;
+  /** Tint applied to `icon` or `systemImage`. */
+  iconColor?: ColorValue;
+  /** Foreground color applied to the option title. */
+  titleColor?: ColorValue;
+}
+
+export interface MenuActionOption extends MenuOptionLabel {
+  /** Actions are the default option type, so this can be omitted. */
+  type?: 'action';
+  /** Stable identifier returned by the native selection event. */
+  id?: string;
   state?: MenuItemState;
   destructive?: boolean;
   disabled?: boolean;
@@ -46,30 +35,43 @@ export interface MenuItemProps {
   onSelect?: () => void;
 }
 
-export interface MenuSubmenuProps {
-  title: string;
-  subtitle?: string;
-  /** SF Symbol name. */
-  systemImage?: string;
-  children: ReactNode;
+export interface MenuSubmenuOption extends MenuOptionLabel {
+  type: 'submenu';
+  /** Marks the submenu and its children as destructive. */
+  destructive?: boolean;
+  /** Prevents the submenu from being opened. */
+  disabled?: boolean;
+  /** Removes the submenu from the rendered menu. */
+  hidden?: boolean;
+  /** Displays the children inline instead of opening a nested menu. */
+  displayInline?: boolean;
+  options: readonly MenuOption[];
 }
 
-export interface MenuSectionProps {
+export interface MenuSectionOption {
+  type: 'section';
   title?: string;
-  children: ReactNode;
+  options: readonly MenuOption[];
 }
 
-export type MenuDividerProps = Record<string, never>;
+export interface MenuDividerOption {
+  type: 'divider';
+}
 
-export type MenuMarkerComponent<Props> = (props: Props) => ReactNode;
+export type MenuOption =
+  MenuActionOption | MenuSubmenuOption | MenuSectionOption | MenuDividerOption;
+
+export interface MenuProps extends Omit<ViewProps, 'children'> {
+  /** The trigger element. */
+  children: ReactNode;
+  /** Native menu actions, submenus, sections, and dividers. */
+  options: readonly MenuOption[];
+  /** Prevents the trigger from opening the menu. */
+  disabled?: boolean;
+  /** Called on a normal tap. When set, a long press opens the menu. */
+  onPrimaryAction?: () => void;
+}
 
 export interface MenuComponent extends ForwardRefExoticComponent<
   MenuProps & RefAttributes<ComponentRef<typeof View>>
-> {
-  Trigger: MenuMarkerComponent<MenuTriggerProps>;
-  Content: MenuMarkerComponent<MenuContentProps>;
-  Item: MenuMarkerComponent<MenuItemProps>;
-  Submenu: MenuMarkerComponent<MenuSubmenuProps>;
-  Section: MenuMarkerComponent<MenuSectionProps>;
-  Divider: MenuMarkerComponent<MenuDividerProps>;
-}
+> {}

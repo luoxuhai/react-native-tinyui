@@ -10,6 +10,16 @@
       "types": "./lib/typescript/src/index.d.ts",
       "default": "./lib/module/index.js"
     },
+    "./menu": {
+      "react-native-tinyui-source": "./src/Menu.tsx",
+      "types": "./lib/typescript/src/Menu.d.ts",
+      "default": "./lib/module/Menu.js"
+    },
+    "./popover": {
+      "react-native-tinyui-source": "./src/Popover.tsx",
+      "types": "./lib/typescript/src/Popover.d.ts",
+      "default": "./lib/module/Popover.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -107,6 +117,11 @@
     "type": "all",
     "jsSrcsDir": "src",
     "ios": {
+      "modules": {
+        "Tinyui": {
+          "className": "Tinyui"
+        }
+      },
       "components": {
         "TinyuiMenuView": {
           "className": "TinyuiMenuView"
