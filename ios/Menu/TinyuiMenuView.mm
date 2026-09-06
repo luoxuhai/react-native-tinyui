@@ -84,6 +84,9 @@ using namespace facebook::react;
   if (oldMenuProps.menuConfig != newMenuProps.menuConfig) {
     _menuProvider.menuConfig = RCTNSStringFromString(newMenuProps.menuConfig);
   }
+  if (oldMenuProps.title != newMenuProps.title) {
+    _menuProvider.title = RCTNSStringFromString(newMenuProps.title);
+  }
   if (oldMenuProps.hasPrimaryAction != newMenuProps.hasPrimaryAction) {
     _menuProvider.hasPrimaryAction = newMenuProps.hasPrimaryAction;
   }

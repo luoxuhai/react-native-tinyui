@@ -38,6 +38,12 @@ import UIKit
     }
   }
 
+  @objc public var title: String = "" {
+    didSet {
+      props.title = title
+    }
+  }
+
   @objc public var disabled: Bool = false {
     didSet {
       props.disabled = disabled

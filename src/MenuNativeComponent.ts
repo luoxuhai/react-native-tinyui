@@ -3,6 +3,7 @@ import type { DirectEventHandler } from 'react-native/Libraries/Types/CodegenTyp
 
 export interface NativeMenuProps extends ViewProps {
   menuConfig: string;
+  title?: string;
   disabled?: boolean;
   hasPrimaryAction?: boolean;
   onItemPress?: DirectEventHandler<Readonly<{ id: string }>>;

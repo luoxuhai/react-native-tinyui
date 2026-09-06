@@ -13,6 +13,7 @@ const MenuRoot = forwardRef<ComponentRef<typeof View>, MenuProps>(function Menu(
     disabled,
     onPrimaryAction,
     options,
+    title,
     testID,
     ...viewProps
   },
@@ -32,6 +33,7 @@ const MenuRoot = forwardRef<ComponentRef<typeof View>, MenuProps>(function Menu(
         onItemPress={(event) => callbacks.get(event.nativeEvent.id)?.()}
         onPrimaryAction={onPrimaryAction}
         testID={testID}
+        title={title}
       >
         <View collapsable={false}>{children}</View>
       </NativeMenuView>

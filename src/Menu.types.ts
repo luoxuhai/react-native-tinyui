@@ -64,6 +64,8 @@ export type MenuOption =
 export interface MenuProps extends Omit<ViewProps, 'children'> {
   /** The trigger element. */
   children: ReactNode;
+  /** Optional title displayed at the top of the native menu. */
+  title?: string;
   /** Native menu actions, submenus, sections, and dividers. */
   options: readonly MenuOption[];
   /** Prevents the trigger from opening the menu. */

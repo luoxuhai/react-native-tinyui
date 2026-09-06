@@ -7,6 +7,7 @@ import UIKit
  */
 class TinyuiMenuProps: ObservableObject {
   @Published var menuConfig: String = "{}"
+  @Published var title: String = ""
   @Published var disabled: Bool = false
   @Published var hasPrimaryAction: Bool = false
   @Published var triggerView: UIView?
@@ -55,6 +56,19 @@ struct TinyuiMenuSwiftUIView: View {
 
   @ViewBuilder
   private var menuContent: some View {
+    if props.title.isEmpty {
+      elementsContent
+    } else {
+      Section {
+        elementsContent
+      } header: {
+        Text(props.title)
+      }
+    }
+  }
+
+  @ViewBuilder
+  private var elementsContent: some View {
     ForEach(buildElements(from: props.menuConfig)) { element in
       element.buildView(delegate: delegate)
     }
@@ -98,11 +112,32 @@ struct TinyuiMenuElement: Identifiable {
     case "action":
       let destructive = inheritedDestructive || (dictionary["destructive"] as? Bool ?? false)
       let keepOpen = dictionary["keepOpen"] as? Bool ?? false
+      let id = dictionary["id"] as? String ?? ""
+      let state = dictionary["state"] as? String ?? "off"
+
+      // `on`/`off` use SwiftUI's native `Toggle` support inside `Menu`,
+      // which renders the system checkmark. `mixed` has no native SwiftUI
+      // equivalent, so it falls back to the minus indicator.
+      if state == "on" || state == "off" {
+        let isOn = Binding<Bool>(
+          get: { state == "on" },
+          set: { _ in delegate?.onItemPress(id: id) }
+        )
+        return AnyView(
+          Toggle(isOn: isOn) {
+            TinyuiMenuLabel(
+              dictionary: dictionary,
+              destructive: destructive,
+              showsState: false
+            )
+          }
+          .disabled(dictionary["disabled"] as? Bool ?? false)
+        )
+      }
+
       return AnyView(
         Button(role: destructive ? .destructive : nil) {
-          if let id = dictionary["id"] as? String {
-            delegate?.onItemPress(id: id)
-          }
+          delegate?.onItemPress(id: id)
         } label: {
           TinyuiMenuLabel(
             dictionary: dictionary,
@@ -192,40 +227,54 @@ private struct TinyuiMenuLabel: View {
   let showsState: Bool
 
   var body: some View {
-    HStack {
+    // SwiftUI only extracts a proper title from a menu Button's label when
+    // the label is a single `Text` (optionally with an icon). Rendering the
+    // title through a computed @ViewBuilder property or wrapping it in
+    // nested containers breaks that extraction, so the title must be a
+    // direct `Text` in the label hierarchy.
+    HStack(spacing: 6) {
       menuIcon
-
-      VStack(alignment: .leading, spacing: 1) {
-        title
-
-        if let subtitle = dictionary["subtitle"] as? String,
-           !subtitle.isEmpty {
-          Text(subtitle)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-        }
-      }
-
+      title
       if showsState {
-        switch dictionary["state"] as? String {
-        case "on":
-          Image(systemName: "checkmark")
-        case "mixed":
-          Image(systemName: "minus")
-        default:
-          EmptyView()
-        }
+        stateIndicator
       }
     }
   }
 
+  private var stateIndicator: some View {
+    // Only `mixed` reaches here; `on`/`off` are handled natively by `Toggle`.
+    // UIKit's menu system renders "mixed" state with a minus/dash mark.
+    if dictionary["state"] as? String == "mixed" {
+      return AnyView(
+        Image(systemName: "minus")
+          .font(.system(size: 13, weight: .semibold))
+      )
+    }
+    return AnyView(EmptyView())
+  }
+
   @ViewBuilder
   private var title: some View {
+    if let subtitle = dictionary["subtitle"] as? String,
+       !subtitle.isEmpty {
+      VStack(alignment: .leading, spacing: 1) {
+        titleText
+        Text(subtitle)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+    } else {
+      titleText
+    }
+  }
+
+  @ViewBuilder
+  private var titleText: some View {
     let text = Text(dictionary["title"] as? String ?? "")
-    if let color = TinyuiMenuColor.uiColor(from: dictionary["titleColor"]) {
-      text.foregroundStyle(Color(uiColor: color))
-    } else if destructive {
+    if destructive {
       text.foregroundStyle(Color.red)
+    } else if let color = TinyuiMenuColor.uiColor(from: dictionary["titleColor"]) {
+      text.foregroundStyle(Color(uiColor: color))
     } else {
       text
     }

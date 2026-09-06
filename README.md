@@ -73,6 +73,7 @@ import { Menu } from 'react-native-tinyui';
 
 <Menu
   accessibilityLabel="Document actions"
+  title="Document actions"
   onPrimaryAction={() => openDocument()}
   options={[
     {
