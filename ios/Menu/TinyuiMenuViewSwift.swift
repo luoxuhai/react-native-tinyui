@@ -253,30 +253,21 @@ private struct TinyuiMenuLabel: View {
     return AnyView(EmptyView())
   }
 
-  @ViewBuilder
-  private var title: some View {
-    if let subtitle = dictionary["subtitle"] as? String,
-       !subtitle.isEmpty {
-      VStack(alignment: .leading, spacing: 1) {
-        titleText
-        Text(subtitle)
-          .font(.caption)
-          .foregroundStyle(.secondary)
-      }
-    } else {
-      titleText
+  private var title: Text {
+    let title = dictionary["title"] as? String ?? ""
+    let subtitle = (dictionary["subtitle"] as? String).flatMap {
+      $0.isEmpty ? nil : $0
     }
-  }
+    let text = subtitle.map { subtitle in
+      Text("\(title)\n\(subtitle)")
+    } ?? Text(title)
 
-  @ViewBuilder
-  private var titleText: some View {
-    let text = Text(dictionary["title"] as? String ?? "")
     if destructive {
-      text.foregroundStyle(Color.red)
+      return text.foregroundColor(.red)
     } else if let color = TinyuiMenuColor.uiColor(from: dictionary["titleColor"]) {
-      text.foregroundStyle(Color(uiColor: color))
+      return text.foregroundColor(Color(uiColor: color))
     } else {
-      text
+      return text
     }
   }
 
