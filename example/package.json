@@ -5,7 +5,8 @@
   "react-native-tinyui": {
     "components": [
       "Menu",
-      "Popover"
+      "Popover",
+      "LiquidGlassText"
     ]
   },
   "scripts": {

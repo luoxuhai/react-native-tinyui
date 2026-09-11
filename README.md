@@ -1,6 +1,6 @@
 # react-native-tinyui
 
-Dependency-free, native iOS `Menu` and `Popover` components for React Native's
+Dependency-free, native iOS `Menu`, `Popover` and `LiquidGlassText` components for React Native's
 New Architecture. The public API follows normal React composition patterns;
 the native UI is implemented with SwiftUI behind Fabric components.
 
@@ -44,8 +44,9 @@ Available components:
 
 - `Menu`
 - `Popover`
+- `LiquidGlassText`
 
-Both components are enabled by default. Use an empty `components` array to
+All components are enabled by default. Use an empty `components` array to
 compile only the TurboModule core. Run `pod install` again whenever this list
 changes. Rendering a component whose native part was not selected throws an
 error that names the missing component.
@@ -55,6 +56,7 @@ Component-specific JavaScript entry points are also available:
 ```tsx
 import { Menu } from 'react-native-tinyui/menu';
 import { Popover } from 'react-native-tinyui/popover';
+import { LiquidGlassText } from 'react-native-tinyui/liquid-glass-text';
 ```
 
 The root `react-native-tinyui` imports remain supported for backwards
@@ -161,6 +163,71 @@ as `Popover.Close`) renders a `Pressable` that calls `close` when pressed.
 Use `open` with `onOpenChange` for a controlled popover, or `defaultOpen` for an
 uncontrolled one. `contentSize` defaults to 320 × 240 points and can be updated
 while the popover is visible.
+
+## LiquidGlassText
+
+`LiquidGlassText` renders native glass inside the glyph outlines, based on
+[GlassText](https://github.com/ailtonvivaz/GlassText). It supports the reference
+library's text, glass, font and alignment APIs through React props.
+Background image loading is not part of this component.
+
+Building this component requires **Xcode 26+**. Glass is rendered on **iOS 26+**;
+on iOS 17–25 it displays ordinary SwiftUI text using the same font, alignment
+and optional tint. The rest of TinyUI continues to support iOS 17+.
+
+```tsx
+import { LiquidGlassText } from 'react-native-tinyui';
+
+<LiquidGlassText
+  text="Liquid Glass"
+  glass={{ effect: 'regular', tint: '#00BBDD' }}
+  font={{ size: 48, weight: 'bold', design: 'rounded' }}
+/>;
+
+<LiquidGlassText
+  text={'Multi-line\nGlass Text\nEffect'}
+  glass="clear"
+  font="largeTitle"
+  fontWeight="heavy"
+  fontDesign="serif"
+  multilineTextAlignment="center"
+/>;
+```
+
+| Prop                     | Values                                                                                   | Default       |
+| ------------------------ | ---------------------------------------------------------------------------------------- | ------------- |
+| `text`                   | String (including text translated in JavaScript)                                         | Required      |
+| `glass`                  | `'clear'`, `'regular'`, `'identity'`, or `{ effect?, tint?, interactive? }`              | `'clear'`     |
+| `font`                   | A semantic text style, or `{ size, weight?, design?, family? }`                          | `'body'`      |
+| `fontWeight`             | `ultraLight`, `thin`, `light`, `regular`, `medium`, `semibold`, `bold`, `heavy`, `black` | Font's weight |
+| `fontDesign`             | `default`, `serif`, `monospaced`, `rounded`                                              | Font's design |
+| `multilineTextAlignment` | `leading`, `center`, `trailing`                                                          | `leading`     |
+
+Semantic font styles are `largeTitle`, `title`, `title2`, `title3`, `headline`,
+`subheadline`, `body`, `callout`, `footnote`, `caption`, and `caption2`. They
+follow SwiftUI Dynamic Type. Explicit `size` values use fixed point sizes;
+`family` accepts the PostScript name of a font installed in the app.
+`fontWeight` and `fontDesign` override the corresponding system font options.
+A custom font family determines its own design.
+
+Glass options accept `tint` as a React Native `ColorValue`, including
+`PlatformColor` and `DynamicColorIOS`. The object form defaults to the clear
+effect, with no tint or interactivity. `identity` applies no glass effect.
+The component also accepts standard `ViewProps`, including `style`, `testID`,
+accessibility props and a native view ref. The supplied text is used for
+the default accessibility label; pass `accessibilityLabel` to override it.
+
+Native content measurements supply the default width and height. Layout styles
+can override these dimensions, but do not resize the font or wrap text. As in
+GlassText, use explicit `\n` characters for multiple lines. Keep padding on a
+surrounding `View`. Color emoji and other glyphs without vector outlines cannot
+produce a glass shape.
+
+`text` accepts a string. Applications using JavaScript localization can pass
+their translated string directly.
+
+The adapted Core Text outline implementation retains the upstream MIT notice in
+[`ios/LiquidGlassText/GlassText-LICENSE`](ios/LiquidGlassText/GlassText-LICENSE).
 
 ## Contributing
 

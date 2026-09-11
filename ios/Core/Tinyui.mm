@@ -13,6 +13,10 @@
   [components addObject:@"Popover"];
 #endif
 
+#if TINYUI_FEATURE_LIQUID_GLASS_TEXT
+  [components addObject:@"LiquidGlassText"];
+#endif
+
   return components;
 }
 

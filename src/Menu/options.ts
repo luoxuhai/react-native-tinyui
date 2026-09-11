@@ -1,6 +1,6 @@
 import { processColor, type ColorValue } from 'react-native';
 
-import type { MenuOption } from './Menu.types';
+import type { MenuOption } from './types';
 
 type NativeMenuColor = ReturnType<typeof processColor>;
 

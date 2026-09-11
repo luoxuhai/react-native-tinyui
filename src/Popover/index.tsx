@@ -2,14 +2,14 @@ import { forwardRef, useCallback, useState, type ComponentRef } from 'react';
 import type { ReactNode } from 'react';
 import { PlatformColor, Pressable, StyleSheet, View } from 'react-native';
 
-import { assertComponentEnabled } from './getNativeTinyui';
-import { PopoverClose } from './PopoverPrimitives';
+import { assertComponentEnabled } from '../utils';
+import { PopoverClose } from './PopoverClose';
 import type {
   PopoverComponent,
   PopoverContentRenderArgs,
   PopoverContent as PopoverContentType,
   PopoverProps,
-} from './Popover.types';
+} from './types';
 import NativePopoverView from './PopoverNativeComponent';
 
 const PopoverRoot = forwardRef<ComponentRef<typeof View>, PopoverProps>(
@@ -90,3 +90,12 @@ export const Popover = Object.assign(PopoverRoot, {
 };
 
 export { PopoverClose };
+
+export type {
+  PopoverArrowEdge,
+  PopoverAttachmentAnchor,
+  PopoverCloseProps,
+  PopoverContent,
+  PopoverContentRenderArgs,
+  PopoverProps,
+} from './types';

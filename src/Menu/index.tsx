@@ -1,10 +1,10 @@
 import { forwardRef, type ComponentRef } from 'react';
 import { View } from 'react-native';
 
-import { assertComponentEnabled } from './getNativeTinyui';
-import type { MenuComponent, MenuProps } from './Menu.types';
+import { assertComponentEnabled } from '../utils';
+import type { MenuComponent, MenuProps } from './types';
 import NativeMenuView from './MenuNativeComponent';
-import { serializeMenuOptions } from './MenuOptions';
+import { serializeMenuOptions } from './options';
 
 const MenuRoot = forwardRef<ComponentRef<typeof View>, MenuProps>(function Menu(
   {
@@ -51,4 +51,4 @@ export type {
   MenuProps,
   MenuSectionOption,
   MenuSubmenuOption,
-} from './Menu.types';
+} from './types';

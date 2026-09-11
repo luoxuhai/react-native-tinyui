@@ -14,6 +14,11 @@ components = {
     :definition => "TINYUI_FEATURE_POPOVER=1",
     :frameworks => ["UIKit"],
   },
+  "LiquidGlassText" => {
+    :source_files => "ios/LiquidGlassText/**/*.{h,m,mm,swift,cpp}",
+    :definition => "TINYUI_FEATURE_LIQUID_GLASS_TEXT=1",
+    :frameworks => ["UIKit", "SwiftUI", "CoreText"],
+  },
 }
 
 configured_components = nil
@@ -74,7 +79,8 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/luoxuhai/react-native-tinyui.git", :tag => "#{s.version}" }
 
   s.source_files = source_files
-  s.private_header_files = ["ios/Core/**/*.h", "ios/Menu/**/*.h", "ios/Popover/**/*.h"]
+  s.private_header_files = ["ios/Core/**/*.h", "ios/Menu/**/*.h", "ios/Popover/**/*.h", "ios/LiquidGlassText/**/*.h"]
+  s.preserve_paths = "ios/LiquidGlassText/GlassText-LICENSE"
   s.swift_version = "5.0"
   s.frameworks = frameworks unless frameworks.empty?
   s.pod_target_xcconfig = {

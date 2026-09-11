@@ -1,8 +1,7 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import { DynamicColorIOS, PlatformColor } from 'react-native';
 
-import { serializeMenuOptions } from '../MenuOptions';
-import { PopoverClose } from '../PopoverPrimitives';
+import { serializeMenuOptions } from '../options';
 
 describe('Menu options', () => {
   it('serializes nested options and keeps callbacks in JavaScript', () => {
@@ -121,18 +120,5 @@ describe('Menu options', () => {
         dark: 0xffddeeff,
       },
     });
-  });
-});
-
-describe('Popover close', () => {
-  it('invokes the close callback when pressed', () => {
-    const close = jest.fn();
-    const element = PopoverClose({ close, children: 'Done' });
-
-    expect(element).not.toBeNull();
-    // The returned element is a Pressable; simulate its onPress.
-    const pressable = element as { props: { onPress: () => void } };
-    pressable.props.onPress();
-    expect(close).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,7 +1,7 @@
 {
   "name": "react-native-tinyui",
   "version": "0.3.0",
-  "description": "Dependency-free native iOS Menu and Popover components for React Native",
+  "description": "Dependency-free native iOS Menu, Popover and LiquidGlassText components for React Native",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
@@ -11,16 +11,21 @@
       "default": "./lib/module/index.js"
     },
     "./menu": {
-      "react-native-tinyui-source": "./src/Menu.tsx",
-      "types": "./lib/typescript/src/Menu.d.ts",
-      "default": "./lib/module/Menu.js"
+      "react-native-tinyui-source": "./src/Menu/index.tsx",
+      "types": "./lib/typescript/src/Menu/index.d.ts",
+      "default": "./lib/module/Menu/index.js"
     },
     "./popover": {
-      "react-native-tinyui-source": "./src/Popover.tsx",
-      "types": "./lib/typescript/src/Popover.d.ts",
-      "default": "./lib/module/Popover.js"
+      "react-native-tinyui-source": "./src/Popover/index.tsx",
+      "types": "./lib/typescript/src/Popover/index.d.ts",
+      "default": "./lib/module/Popover/index.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./liquid-glass-text": {
+      "react-native-tinyui-source": "./src/LiquidGlassText/index.tsx",
+      "types": "./lib/typescript/src/LiquidGlassText/index.d.ts",
+      "default": "./lib/module/LiquidGlassText/index.js"
+    }
   },
   "files": [
     "src",
@@ -47,7 +52,8 @@
     "ios",
     "menu",
     "popover",
-    "fabric"
+    "fabric",
+    "liquid-glass"
   ],
   "repository": {
     "type": "git",
@@ -128,6 +134,9 @@
         },
         "TinyuiPopoverView": {
           "className": "TinyuiPopoverView"
+        },
+        "TinyuiLiquidGlassTextView": {
+          "className": "TinyuiLiquidGlassTextView"
         }
       }
     }

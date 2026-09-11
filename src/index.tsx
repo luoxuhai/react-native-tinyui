@@ -7,7 +7,7 @@ export type {
   MenuProps,
   MenuSectionOption,
   MenuSubmenuOption,
-} from './Menu.types';
+} from './Menu';
 
 export { Popover, PopoverClose } from './Popover';
 export type {
@@ -17,7 +17,17 @@ export type {
   PopoverContent,
   PopoverContentRenderArgs,
   PopoverProps,
-} from './Popover.types';
+} from './Popover';
 
-export { getNativeTinyui, assertComponentEnabled } from './getNativeTinyui';
-export type { TinyuiComponent } from './getNativeTinyui';
+export { getNativeTinyui, assertComponentEnabled } from './utils';
+export type { TinyuiComponent } from './utils';
+
+export { LiquidGlassText } from './LiquidGlassText';
+export type {
+  LiquidGlassTextFont,
+  LiquidGlassTextFontDesign,
+  LiquidGlassTextFontStyle,
+  LiquidGlassTextFontWeight,
+  LiquidGlassTextGlass,
+  LiquidGlassTextProps,
+} from './LiquidGlassText';

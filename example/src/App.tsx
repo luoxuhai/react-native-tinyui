@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Menu, Popover, PopoverClose } from 'react-native-tinyui';
+import {
+  LiquidGlassText,
+  Menu,
+  Popover,
+  PopoverClose,
+} from 'react-native-tinyui';
 
 export default function App() {
   const [lastAction, setLastAction] = useState('No action selected');
@@ -16,6 +21,37 @@ export default function App() {
         <Text style={styles.subtitle}>
           Fabric components with a small, composable React API.
         </Text>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>LiquidGlassText</Text>
+          <Text style={styles.body}>Native glass lettering · iOS 26+</Text>
+          <View style={styles.glassStage}>
+            <View style={styles.glassOrb} />
+            <LiquidGlassText
+              text="Liquid Glass"
+              glass={{ effect: 'regular', tint: '#FFFFFF55' }}
+              font={{ size: 38, weight: 'heavy', design: 'rounded' }}
+              testID="liquid-glass-title"
+            />
+            <LiquidGlassText
+              text={'Clear glass\n多行文字'}
+              font={{ size: 30, weight: 'bold', design: 'serif' }}
+              multilineTextAlignment="center"
+              testID="liquid-glass-multiline"
+            />
+            <LiquidGlassText
+              text="Hello, Glass!"
+              glass={{
+                effect: 'regular',
+                tint: '#80E8FF99',
+                interactive: true,
+              }}
+              font="title2"
+              fontWeight="semibold"
+              fontDesign="monospaced"
+            />
+          </View>
+        </View>
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Menu</Text>
@@ -102,6 +138,24 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  glassStage: {
+    marginTop: 18,
+    paddingVertical: 24,
+    borderRadius: 18,
+    backgroundColor: '#423282',
+    alignItems: 'center',
+    gap: 16,
+    overflow: 'hidden',
+  },
+  glassOrb: {
+    position: 'absolute',
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: '#C34F8B',
+    right: -55,
+    top: -60,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: '#F4F5F7',

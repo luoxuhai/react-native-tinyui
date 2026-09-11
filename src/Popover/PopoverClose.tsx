@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Pressable } from 'react-native';
 
-import type { PopoverCloseProps } from './Popover.types';
+import type { PopoverCloseProps } from './types';
 
 /**
  * A button that dismisses the popover. Render it inside the `content` prop
