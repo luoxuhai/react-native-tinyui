@@ -1,6 +1,6 @@
 {
   "name": "react-native-tinyui",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Dependency-free native iOS Menu, Popover and LiquidGlassText components for React Native",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
