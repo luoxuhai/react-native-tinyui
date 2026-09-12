@@ -10,8 +10,8 @@
     ]
   },
   "scripts": {
-    "ios": "react-native run-ios",
-    "start": "react-native start",
+    "ios": "react-native run-ios --port 8082",
+    "start": "react-native start --port 8082",
     "build:ios": "react-native build-ios --mode Debug"
   },
   "dependencies": {

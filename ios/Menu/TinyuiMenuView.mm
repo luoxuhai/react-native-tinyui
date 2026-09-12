@@ -4,6 +4,7 @@
 
 #import <React/RCTConversions.h>
 #import <React/UIView+React.h>
+#import <react/utils/FollyConvert.h>
 
 #import <react/renderer/components/TinyuiSpec/ComponentDescriptors.h>
 #import <react/renderer/components/TinyuiSpec/EventEmitters.h>
@@ -82,7 +83,7 @@ using namespace facebook::react;
   const auto &newMenuProps = *std::static_pointer_cast<TinyuiMenuViewProps const>(props);
 
   if (oldMenuProps.menuConfig != newMenuProps.menuConfig) {
-    _menuProvider.menuConfig = RCTNSStringFromString(newMenuProps.menuConfig);
+    _menuProvider.menuConfig = convertFollyDynamicToId(newMenuProps.menuConfig);
   }
   if (oldMenuProps.title != newMenuProps.title) {
     _menuProvider.title = RCTNSStringFromString(newMenuProps.title);

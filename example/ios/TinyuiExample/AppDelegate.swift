@@ -60,9 +60,17 @@ class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
 
   override func bundleURL() -> URL? {
 #if DEBUG
-    RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
+    // Set the port at runtime so it also works with prebuilt React Native frameworks.
+    // React Native writes the development machine's IP for physical-device builds.
+    let ipURL = Bundle.main.url(forResource: "ip", withExtension: "txt")
+    let ip = ipURL.flatMap { try? String(contentsOf: $0, encoding: .utf8) }?
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+    let host = ip.flatMap { $0.isEmpty ? nil : $0 } ?? "localhost"
+    let provider = RCTBundleURLProvider.sharedSettings()
+    provider.jsLocation = "\(host):8082"
+    return provider.jsBundleURL(forBundleRoot: "index")
 #else
-    Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+    return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
 #endif
   }
 }

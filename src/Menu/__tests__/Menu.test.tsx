@@ -16,7 +16,7 @@ describe('Menu options', () => {
       },
     ]);
 
-    expect(JSON.parse(parsed.config)).toEqual({
+    expect(parsed.config).toEqual({
       items: [
         expect.objectContaining({
           id: 'rename',
@@ -71,7 +71,7 @@ describe('Menu options', () => {
       },
     ]);
 
-    expect(JSON.parse(parsed.config)).toEqual({
+    expect(parsed.config).toEqual({
       items: [
         {
           id: 'selected',
@@ -111,13 +111,13 @@ describe('Menu options', () => {
         }),
       },
     ]);
-    const [item] = JSON.parse(parsed.config).items;
-
-    expect(item.titleColor).toEqual({ semantic: ['label'] });
-    expect(item.iconColor).toEqual({
-      dynamic: {
-        light: 0xff112233,
-        dark: 0xffddeeff,
+    expect(parsed.config.items[0]).toMatchObject({
+      titleColor: { semantic: ['label'] },
+      iconColor: {
+        dynamic: {
+          light: 0xff112233,
+          dark: 0xffddeeff,
+        },
       },
     });
   });

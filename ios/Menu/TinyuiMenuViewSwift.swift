@@ -1,3 +1,4 @@
+import React
 import SwiftUI
 import UIKit
 
@@ -6,7 +7,7 @@ import UIKit
  * SwiftUI `Menu` implementation. Mirror of `TinyuiMenuProps` in codegen.
  */
 class TinyuiMenuProps: ObservableObject {
-  @Published var menuConfig: String = "{}"
+  @Published var menuConfig: [String: Any] = [:]
   @Published var title: String = ""
   @Published var disabled: Bool = false
   @Published var hasPrimaryAction: Bool = false
@@ -18,7 +19,7 @@ class TinyuiMenuProps: ObservableObject {
  *
  * The React Native trigger (a UIView) is embedded as the menu label through
  * `RepresentableView`, so the tap target remains the native RN subtree while
- * the menu content is built natively from the JSON config.
+ * the menu content is built natively from the configuration object.
  *
  * Named distinctly from the Fabric component view `TinyuiMenuView`.
  */
@@ -74,13 +75,9 @@ struct TinyuiMenuSwiftUIView: View {
     }
   }
 
-  /// Parses the JSON menu config into a list of SwiftUI element builders.
-  private func buildElements(from json: String) -> [TinyuiMenuElement] {
-    guard
-      let data = json.data(using: .utf8),
-      let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-      let items = root["items"] as? [[String: Any]]
-    else {
+  /// Converts the menu config into a list of SwiftUI element builders.
+  private func buildElements(from config: [String: Any]) -> [TinyuiMenuElement] {
+    guard let items = config["items"] as? [[String: Any]] else {
       return []
     }
     return items.map { TinyuiMenuElement(dictionary: $0) }
@@ -88,8 +85,8 @@ struct TinyuiMenuSwiftUIView: View {
 }
 
 /**
- * Lightweight representation of a single UIMenu element parsed from the JSON
- * config. Used to build SwiftUI menu content without resolving all elements
+ * Lightweight representation of a single UIMenu element read from the config.
+ * Used to build SwiftUI menu content without resolving all elements
  * eagerly. Returns `AnyView` to avoid recursive opaque return type errors.
  */
 struct TinyuiMenuElement: Identifiable {
@@ -226,19 +223,41 @@ private struct TinyuiMenuLabel: View {
   let destructive: Bool
   let showsState: Bool
 
+  @ViewBuilder
   var body: some View {
-    // SwiftUI only extracts a proper title from a menu Button's label when
-    // the label is a single `Text` (optionally with an icon). Rendering the
-    // title through a computed @ViewBuilder property or wrapping it in
-    // nested containers breaks that extraction, so the title must be a
-    // direct `Text` in the label hierarchy.
-    HStack(spacing: 6) {
-      menuIcon
-      title
-      if showsState {
-        stateIndicator
+    // Menu controls interpret the first text as the title and the second as
+    // the subtitle. When an icon is present, `Label` replaces the first Text,
+    // matching SwiftUI's native menu-item representation.
+    if hasIcon {
+      Label {
+        title
+      } icon: {
+        menuIcon
       }
+    } else {
+      title
     }
+
+    if let subtitle {
+      Text(subtitle)
+    }
+
+    if showsState {
+      stateIndicator
+    }
+  }
+
+  private var subtitle: String? {
+    (dictionary["subtitle"] as? String).flatMap {
+      $0.isEmpty ? nil : $0
+    }
+  }
+
+  private var hasIcon: Bool {
+    if let icon = dictionary["icon"] as? String, !icon.isEmpty {
+      return UIImage(named: icon) != nil
+    }
+    return !(dictionary["systemImage"] as? String ?? "").isEmpty
   }
 
   private var stateIndicator: some View {
@@ -254,13 +273,7 @@ private struct TinyuiMenuLabel: View {
   }
 
   private var title: Text {
-    let title = dictionary["title"] as? String ?? ""
-    let subtitle = (dictionary["subtitle"] as? String).flatMap {
-      $0.isEmpty ? nil : $0
-    }
-    let text = subtitle.map { subtitle in
-      Text("\(title)\n\(subtitle)")
-    } ?? Text(title)
+    let text = Text(dictionary["title"] as? String ?? "")
 
     if destructive {
       return text.foregroundColor(.red)
@@ -303,102 +316,7 @@ private struct TinyuiMenuLabel: View {
 /** Converts React Native's processed ColorValue JSON into a dynamic UIColor. */
 private enum TinyuiMenuColor {
   static func uiColor(from value: Any?) -> UIColor? {
-    if let number = value as? NSNumber {
-      let argb = number.uint32Value
-      return UIColor(
-        red: CGFloat((argb >> 16) & 0xff) / 255,
-        green: CGFloat((argb >> 8) & 0xff) / 255,
-        blue: CGFloat(argb & 0xff) / 255,
-        alpha: CGFloat((argb >> 24) & 0xff) / 255
-      )
-    }
-
-    guard let object = value as? [String: Any] else {
-      return nil
-    }
-
-    if let semanticNames = object["semantic"] as? [String] {
-      for name in semanticNames {
-        if let color = semanticColor(named: name) {
-          return color
-        }
-      }
-    }
-
-    if let dynamic = object["dynamic"] as? [String: Any] {
-      return UIColor { traits in
-        let highContrast = traits.accessibilityContrast == .high
-        let dark = traits.userInterfaceStyle == .dark
-        let preferredKey: String
-
-        switch (dark, highContrast) {
-        case (true, true):
-          preferredKey = "highContrastDark"
-        case (false, true):
-          preferredKey = "highContrastLight"
-        case (true, false):
-          preferredKey = "dark"
-        case (false, false):
-          preferredKey = "light"
-        }
-
-        return uiColor(from: dynamic[preferredKey])
-          ?? uiColor(from: dynamic[dark ? "dark" : "light"])
-          ?? UIColor.clear
-      }
-    }
-
-    return nil
-  }
-
-  private static func semanticColor(named name: String) -> UIColor? {
-    if let color = UIColor(named: name) {
-      return color
-    }
-
-    let normalizedName = name.hasSuffix("Color")
-      ? String(name.dropLast("Color".count))
-      : name
-
-    switch normalizedName {
-    case "label": return .label
-    case "secondaryLabel": return .secondaryLabel
-    case "tertiaryLabel": return .tertiaryLabel
-    case "quaternaryLabel": return .quaternaryLabel
-    case "placeholderText": return .placeholderText
-    case "separator": return .separator
-    case "opaqueSeparator": return .opaqueSeparator
-    case "link": return .link
-    case "systemBackground": return .systemBackground
-    case "secondarySystemBackground": return .secondarySystemBackground
-    case "tertiarySystemBackground": return .tertiarySystemBackground
-    case "systemGroupedBackground": return .systemGroupedBackground
-    case "secondarySystemGroupedBackground": return .secondarySystemGroupedBackground
-    case "tertiarySystemGroupedBackground": return .tertiarySystemGroupedBackground
-    case "systemFill": return .systemFill
-    case "secondarySystemFill": return .secondarySystemFill
-    case "tertiarySystemFill": return .tertiarySystemFill
-    case "quaternarySystemFill": return .quaternarySystemFill
-    case "systemRed": return .systemRed
-    case "systemOrange": return .systemOrange
-    case "systemYellow": return .systemYellow
-    case "systemGreen": return .systemGreen
-    case "systemMint": return .systemMint
-    case "systemTeal": return .systemTeal
-    case "systemCyan": return .systemCyan
-    case "systemBlue": return .systemBlue
-    case "systemIndigo": return .systemIndigo
-    case "systemPurple": return .systemPurple
-    case "systemPink": return .systemPink
-    case "systemBrown": return .systemBrown
-    case "systemGray": return .systemGray
-    case "systemGray2": return .systemGray2
-    case "systemGray3": return .systemGray3
-    case "systemGray4": return .systemGray4
-    case "systemGray5": return .systemGray5
-    case "systemGray6": return .systemGray6
-    default: return nil
-    }
+    value.flatMap(RCTConvert.uiColor)
   }
 }
 

@@ -48,8 +48,12 @@ type NativeMenuElement =
   | NativeMenuSection
   | NativeMenuSeparator;
 
+interface NativeMenuConfiguration {
+  items: NativeMenuElement[];
+}
+
 export interface SerializedMenuOptions {
-  config: string;
+  config: NativeMenuConfiguration;
   callbacks: Map<string, () => void>;
 }
 
@@ -65,7 +69,7 @@ export function serializeMenuOptions(
 
   return {
     callbacks,
-    config: JSON.stringify({ items }),
+    config: { items },
   };
 }
 

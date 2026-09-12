@@ -2,60 +2,64 @@ import CoreText
 import SwiftUI
 import UIKit
 
-private struct LiquidGlassTextConfiguration: Decodable {
-  struct FontConfiguration: Decodable {
-    let style: String?
-    let size: CGFloat?
-    let weight: String?
-    let design: String?
-    let family: String?
+private struct LiquidGlassTextConfiguration {
+  struct TextStyleConfiguration {
+    let fontSize: CGFloat?
+    let fontFamily: String?
+    let fontWeight: String?
+    let fontStyle: String?
+    let letterSpacing: CGFloat?
+
+    init(_ dictionary: [String: Any]) {
+      fontSize = (dictionary["fontSize"] as? NSNumber).map { CGFloat($0.doubleValue) }
+      fontFamily = dictionary["fontFamily"] as? String
+      fontWeight = dictionary["fontWeight"] as? String
+      fontStyle = dictionary["fontStyle"] as? String
+      letterSpacing = (dictionary["letterSpacing"] as? NSNumber).map { CGFloat($0.doubleValue) }
+    }
   }
 
   var text: String?
-  var glass: String?
+  var effect: String?
   var interactive: Bool?
-  var font: FontConfiguration?
-  var fontWeight: String?
   var fontDesign: String?
+  var textStyle: TextStyleConfiguration?
   var multilineTextAlignment: String?
+
+  init(_ dictionary: [String: Any] = [:]) {
+    text = dictionary["text"] as? String
+    effect = dictionary["effect"] as? String
+    interactive = dictionary["interactive"] as? Bool
+    fontDesign = dictionary["fontDesign"] as? String
+    textStyle = (dictionary["textStyle"] as? [String: Any]).map(TextStyleConfiguration.init)
+    multilineTextAlignment = dictionary["multilineTextAlignment"] as? String
+  }
 
   var resolvedFont: Font {
     let design: Font.Design
-    switch fontDesign ?? font?.design {
+    switch fontDesign {
     case "serif": design = .serif
     case "monospaced": design = .monospaced
     case "rounded": design = .rounded
     default: design = .default
     }
 
-    let style: Font.TextStyle
-    switch font?.style {
-    case "largeTitle": style = .largeTitle
-    case "title": style = .title
-    case "title2": style = .title2
-    case "title3": style = .title3
-    case "headline": style = .headline
-    case "subheadline": style = .subheadline
-    case "callout": style = .callout
-    case "footnote": style = .footnote
-    case "caption": style = .caption
-    case "caption2": style = .caption2
-    default: style = .body
-    }
-
+    let size = textStyle?.fontSize
+    let family = textStyle?.fontFamily
     var result: Font
-    if let size = font?.size, size.isFinite, size > 0 {
-      if let family = font?.family, !family.isEmpty {
+    if let family, !family.isEmpty {
+      if let size, size.isFinite, size > 0 {
         result = .custom(family, fixedSize: size)
       } else {
-        result = .system(size: size, design: design)
+        result = .custom(family, size: 17, relativeTo: .body)
       }
+    } else if let size, size.isFinite, size > 0 {
+      result = .system(size: size, design: design)
     } else {
-      result = .system(style, design: design)
+      result = .system(.body, design: design)
     }
 
-    // Preserve a semantic style's default weight (e.g. headline) unless overridden.
-    if let weight = fontWeight ?? font?.weight {
+    if let weight = textStyle?.fontWeight {
       switch weight {
       case "ultraLight": result = result.weight(.ultraLight)
       case "thin": result = result.weight(.thin)
@@ -68,6 +72,9 @@ private struct LiquidGlassTextConfiguration: Decodable {
       default: result = result.weight(.regular)
       }
     }
+    if textStyle?.fontStyle == "italic" {
+      result = result.italic()
+    }
     return result
   }
 
@@ -77,6 +84,11 @@ private struct LiquidGlassTextConfiguration: Decodable {
     case "trailing": return .trailing
     default: return .leading
     }
+  }
+
+  var resolvedLetterSpacing: CGFloat {
+    guard let letterSpacing = textStyle?.letterSpacing, letterSpacing.isFinite else { return 0 }
+    return letterSpacing
   }
 }
 
@@ -90,12 +102,14 @@ private struct LiquidGlassTextContent: View {
       if #available(iOS 26.0, *) {
         LiquidGlassTextEffect(
           text: text,
-          effect: configuration.glass ?? "clear",
+          effect: configuration.effect ?? "clear",
           tintColor: tintColor,
-          interactive: configuration.interactive ?? false
+          interactive: configuration.interactive ?? false,
+          letterSpacing: configuration.resolvedLetterSpacing
         )
       } else {
         Text(verbatim: text)
+          .tracking(configuration.resolvedLetterSpacing)
           .foregroundStyle(tintColor.map { Color(uiColor: $0) } ?? .primary)
       }
     }
@@ -114,6 +128,7 @@ private struct LiquidGlassTextEffect: View {
   let effect: String
   let tintColor: UIColor?
   let interactive: Bool
+  let letterSpacing: CGFloat
 
   @Environment(\.font) private var font
   @Environment(\.fontResolutionContext) private var fontResolutionContext
@@ -141,14 +156,21 @@ private struct LiquidGlassTextEffect: View {
     let width = lines.reduce(CGFloat.zero) { width, line in
       let attributed = NSAttributedString(
         string: line,
-        attributes: [kCTFontAttributeName as NSAttributedString.Key: ctFont]
+        attributes: [
+          kCTFontAttributeName as NSAttributedString.Key: ctFont,
+          kCTKernAttributeName as NSAttributedString.Key: letterSpacing,
+        ]
       )
       return max(width, CGFloat(CTLineGetTypographicBounds(
         CTLineCreateWithAttributedString(attributed), nil, nil, nil
       )))
     }
     let shape = TinyuiTextOutlineShape(
-      text: text, ctFont: ctFont, fontSize: resolved.pointSize, alignment: alignment
+      text: text,
+      ctFont: ctFont,
+      fontSize: resolved.pointSize,
+      alignment: alignment,
+      letterSpacing: letterSpacing
     )
     Rectangle()
       .fill(.clear)
@@ -157,44 +179,22 @@ private struct LiquidGlassTextEffect: View {
   }
 }
 
-@objc public protocol TinyuiLiquidGlassTextViewDelegate: AnyObject {
-  func onContentSizeChange(width: Double, height: Double, configuration: String)
-}
-
 @objc public class TinyuiLiquidGlassTextProvider: UIView {
-  private weak var delegate: TinyuiLiquidGlassTextViewDelegate?
   private var hostingController: UIHostingController<LiquidGlassTextContent>?
   private var configuration = LiquidGlassTextConfiguration()
-  private var configurationJSON = "{}"
   private var tintColorValue: UIColor?
-  private var lastSize: CGSize?
 
   @objc public weak var parentViewController: UIViewController? {
     didSet { setNeedsLayout() }
   }
 
-  @objc public convenience init(delegate: TinyuiLiquidGlassTextViewDelegate) {
-    self.init(frame: .zero)
-    self.delegate = delegate
-    registerForTraitChanges([UITraitPreferredContentSizeCategory.self]) {
-      (view: TinyuiLiquidGlassTextProvider, _: UITraitCollection) in
-      view.invalidateMeasurement()
-    }
-  }
-
-  @objc public func configure(_ json: String, tintColor: UIColor?) {
-    guard json != configurationJSON || tintColor != tintColorValue else { return }
-    configurationJSON = json
-    configuration = (try? JSONDecoder().decode(
-      LiquidGlassTextConfiguration.self, from: Data(json.utf8)
-    )) ?? LiquidGlassTextConfiguration()
+  @objc public func configure(
+    _ dictionary: [String: Any],
+    tintColor: UIColor?
+  ) {
+    configuration = LiquidGlassTextConfiguration(dictionary)
     tintColorValue = tintColor
     hostingController?.rootView = content
-    invalidateMeasurement()
-  }
-
-  @objc public func invalidateMeasurement() {
-    lastSize = nil
     setNeedsLayout()
   }
 
@@ -207,7 +207,7 @@ private struct LiquidGlassTextEffect: View {
     if window == nil {
       detachController()
     } else {
-      invalidateMeasurement()
+      setNeedsLayout()
     }
   }
 
@@ -221,10 +221,8 @@ private struct LiquidGlassTextEffect: View {
   @objc public func reset() {
     detachController()
     parentViewController = nil
-    configurationJSON = "{}"
     configuration = LiquidGlassTextConfiguration()
     tintColorValue = nil
-    lastSize = nil
   }
 
   override public func layoutSubviews() {
@@ -248,18 +246,5 @@ private struct LiquidGlassTextEffect: View {
       controller.didMove(toParent: parentViewController)
     }
     controller.view.frame = bounds
-
-    // GlassText uses explicit newlines and intrinsic sizing, never automatic wrapping.
-    let measured = controller.sizeThatFits(in: CGSize(width: 100_000, height: 100_000))
-    let scale = traitCollection.displayScale > 0 ? traitCollection.displayScale : 1
-    let size = CGSize(
-      width: ceil(measured.width * scale) / scale,
-      height: ceil(measured.height * scale) / scale
-    )
-    guard size.width.isFinite, size.height.isFinite, size != lastSize else { return }
-    lastSize = size
-    delegate?.onContentSizeChange(
-      width: size.width, height: size.height, configuration: configurationJSON
-    )
   }
 }

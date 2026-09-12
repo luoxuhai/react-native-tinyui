@@ -1747,7 +1747,7 @@ PODS:
     - React-utils (= 0.85.0)
     - ReactNativeDependencies
   - ReactNativeDependencies (0.85.0)
-  - Tinyui (0.3.0):
+  - Tinyui (0.4.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2072,7 +2072,7 @@ SPEC CHECKSUMS:
   ReactCodegen: ab01ebfffac5cda9140204eb872ed97c15df225f
   ReactCommon: 47ef95b0920948a0b54d7439f7452501eeeac071
   ReactNativeDependencies: 7956cf505aedf964d23983834ebcbff3fc599b00
-  Tinyui: ded91674eefa933a6be4e3174f1aa45a74455ed2
+  Tinyui: 5a73670a2c7e10d885f2e3df9caa5b7118734948
   Yoga: cc155241ea30670878e270d52d74cf29487c4bbb
 
 PODFILE CHECKSUM: e657586edc782ae20752d319f014d36f591075bb

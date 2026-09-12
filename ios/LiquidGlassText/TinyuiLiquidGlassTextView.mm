@@ -4,17 +4,16 @@
 
 #import <React/RCTConversions.h>
 #import <React/UIView+React.h>
-#import <react/renderer/components/TinyuiSpec/ComponentDescriptors.h>
-#import <react/renderer/components/TinyuiSpec/EventEmitters.h>
+#import <react/utils/FollyConvert.h>
 #import <react/renderer/components/TinyuiSpec/Props.h>
 #import <react/renderer/components/TinyuiSpec/RCTComponentViewHelpers.h>
 #import "RCTFabricComponentsPlugins.h"
 #import "Tinyui-Swift.h"
+#import "TinyuiLiquidGlassTextShadowNode.h"
 
 using namespace facebook::react;
 
-@interface TinyuiLiquidGlassTextView () <RCTTinyuiLiquidGlassTextViewViewProtocol,
-                                        TinyuiLiquidGlassTextViewDelegate>
+@interface TinyuiLiquidGlassTextView () <RCTTinyuiLiquidGlassTextViewViewProtocol>
 @end
 
 @implementation TinyuiLiquidGlassTextView {
@@ -23,7 +22,7 @@ using namespace facebook::react;
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
 {
-  return concreteComponentDescriptorProvider<TinyuiLiquidGlassTextViewComponentDescriptor>();
+  return concreteComponentDescriptorProvider<TinyuiLiquidGlassTextComponentDescriptor>();
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -31,7 +30,7 @@ using namespace facebook::react;
   if (self = [super initWithFrame:frame]) {
     static const auto defaultProps = std::make_shared<const TinyuiLiquidGlassTextViewProps>();
     _props = defaultProps;
-    _provider = [[TinyuiLiquidGlassTextProvider alloc] initWithDelegate:self];
+    _provider = [[TinyuiLiquidGlassTextProvider alloc] initWithFrame:CGRectZero];
     self.contentView = _provider;
   }
   return self;
@@ -48,29 +47,9 @@ using namespace facebook::react;
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
 {
   const auto &newProps = *std::static_pointer_cast<TinyuiLiquidGlassTextViewProps const>(props);
-  [_provider configure:RCTNSStringFromString(newProps.configuration)
+  [_provider configure:convertFollyDynamicToId(newProps.configuration)
              tintColor:RCTUIColorFromSharedColor(newProps.tintColor)];
   [super updateProps:props oldProps:oldProps];
-}
-
-- (void)updateEventEmitter:(EventEmitter::Shared const &)eventEmitter
-{
-  [super updateEventEmitter:eventEmitter];
-  [_provider invalidateMeasurement];
-}
-
-- (void)onContentSizeChangeWithWidth:(double)width
-                            height:(double)height
-                     configuration:(NSString *)configuration
-{
-  if (_eventEmitter == nullptr) {
-    return;
-  }
-  std::static_pointer_cast<const TinyuiLiquidGlassTextViewEventEmitter>(_eventEmitter)
-      ->onContentSizeChange(TinyuiLiquidGlassTextViewEventEmitter::OnContentSizeChange{
-          .width = width,
-          .height = height,
-          .configuration = RCTStringFromNSString(configuration)});
 }
 
 - (void)prepareForRecycle

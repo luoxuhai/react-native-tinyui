@@ -31,8 +31,8 @@ import UIKit
     }
   }
 
-  /// JSON menu configuration passed to the SwiftUI view.
-  @objc public var menuConfig: String = "{}" {
+  /// Menu configuration passed to the SwiftUI view.
+  @objc public var menuConfig: [String: Any] = [:] {
     didSet {
       props.menuConfig = menuConfig
     }

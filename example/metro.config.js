@@ -16,4 +16,10 @@ const config = withMetroConfig(getDefaultConfig(__dirname), {
   conditions: ['react-native-tinyui-source'],
 });
 
-module.exports = config;
+module.exports = {
+  ...config,
+  server: {
+    ...config.server,
+    port: 8082,
+  },
+};

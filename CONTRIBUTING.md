@@ -35,6 +35,12 @@ To start the packager:
 yarn example start
 ```
 
+The example app uses Metro port `8082`. This is configured in
+`example/package.json`, `example/metro.config.js`, and the debug bundle URL in
+`example/ios/TinyuiExample/AppDelegate.swift`. Keep these values in sync when
+changing the port. Rebuild the iOS app after changing it, including when running
+directly from Xcode.
+
 To run the example app on iOS:
 
 ```sh

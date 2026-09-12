@@ -24,10 +24,8 @@ export type { TinyuiComponent } from './utils';
 
 export { LiquidGlassText } from './LiquidGlassText';
 export type {
-  LiquidGlassTextFont,
   LiquidGlassTextFontDesign,
-  LiquidGlassTextFontStyle,
-  LiquidGlassTextFontWeight,
-  LiquidGlassTextGlass,
+  LiquidGlassTextEffect,
   LiquidGlassTextProps,
+  LiquidGlassTextStyle,
 } from './LiquidGlassText';

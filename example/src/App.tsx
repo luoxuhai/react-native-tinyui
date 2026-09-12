@@ -1,15 +1,9 @@
-import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import {
-  LiquidGlassText,
-  Menu,
-  Popover,
-  PopoverClose,
-} from 'react-native-tinyui';
+import { LiquidGlassText, Popover, PopoverClose } from 'react-native-tinyui';
+
+import { MenuExamples } from './MenuExamples';
 
 export default function App() {
-  const [lastAction, setLastAction] = useState('No action selected');
-
   return (
     <View style={styles.safeArea}>
       <ScrollView
@@ -29,80 +23,31 @@ export default function App() {
             <View style={styles.glassOrb} />
             <LiquidGlassText
               text="Liquid Glass"
-              glass={{ effect: 'regular', tint: '#FFFFFF55' }}
-              font={{ size: 38, weight: 'heavy', design: 'rounded' }}
+              effect="regular"
+              tint="#FFFFFF55"
+              fontDesign="rounded"
+              textStyle={styles.glassTitle}
               testID="liquid-glass-title"
             />
             <LiquidGlassText
               text={'Clear glass\n多行文字'}
-              font={{ size: 30, weight: 'bold', design: 'serif' }}
+              fontDesign="serif"
+              textStyle={styles.glassMultiline}
               multilineTextAlignment="center"
               testID="liquid-glass-multiline"
             />
             <LiquidGlassText
               text="Hello, Glass!"
-              glass={{
-                effect: 'regular',
-                tint: '#80E8FF99',
-                interactive: true,
-              }}
-              font="title2"
-              fontWeight="semibold"
+              effect="regular"
+              tint="#80E8FF99"
+              interactive
               fontDesign="monospaced"
+              textStyle={styles.glassSubtitle}
             />
           </View>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Menu</Text>
-          <Text style={styles.body}>{lastAction}</Text>
-          <Menu
-            accessibilityLabel="Open document actions"
-            options={[
-              {
-                title: 'Rename',
-                systemImage: 'square.and.pencil',
-                onSelect: () => setLastAction('Rename selected'),
-              },
-              {
-                title: 'Duplicate',
-                systemImage: 'doc.on.doc',
-                state: 'on',
-                onSelect: () => setLastAction('Duplicate selected'),
-              },
-              {
-                type: 'submenu',
-                title: 'Share',
-                systemImage: 'square.and.arrow.up',
-                options: [
-                  {
-                    title: 'Copy link',
-                    systemImage: 'link',
-                    onSelect: () => setLastAction('Copy link selected'),
-                  },
-                  {
-                    title: 'Invite people',
-                    systemImage: 'person.2',
-                    onSelect: () => setLastAction('Invite people selected'),
-                  },
-                ],
-              },
-              { type: 'divider' },
-              {
-                title: 'Delete',
-                destructive: true,
-                systemImage: 'trash',
-                onSelect: () => setLastAction('Delete selected'),
-              },
-            ]}
-            style={styles.control}
-          >
-            <View style={styles.primaryButton}>
-              <Text style={styles.primaryButtonText}>Document actions</Text>
-              <Text style={styles.chevron}>⌄</Text>
-            </View>
-          </Menu>
-        </View>
+        <MenuExamples />
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Popover</Text>
@@ -146,6 +91,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 16,
     overflow: 'hidden',
+  },
+  glassTitle: {
+    fontSize: 38,
+    fontWeight: '800',
+  },
+  glassMultiline: {
+    fontSize: 30,
+    fontWeight: '700',
+  },
+  glassSubtitle: {
+    fontSize: 22,
+    fontWeight: '600',
   },
   glassOrb: {
     position: 'absolute',
@@ -205,25 +162,6 @@ const styles = StyleSheet.create({
   },
   control: {
     marginTop: 18,
-  },
-  primaryButton: {
-    minHeight: 50,
-    borderRadius: 15,
-    backgroundColor: '#6E6BFF',
-    paddingHorizontal: 17,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  chevron: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '700',
   },
   secondaryButton: {
     width: 200,

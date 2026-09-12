@@ -7,12 +7,6 @@ import type { LiquidGlassTextProps } from '../types';
 import type { NativeLiquidGlassTextProps } from '../LiquidGlassTextNativeComponent';
 import { assertComponentEnabled } from '../../utils';
 
-const mockSetMeasurement = jest.fn();
-
-jest.mock('react', () => ({
-  ...jest.requireActual<typeof import('react')>('react'),
-  useState: () => [{ width: 120, height: 40 }, mockSetMeasurement],
-}));
 jest.mock('../../utils', () => ({
   assertComponentEnabled: jest.fn(),
 }));
@@ -41,71 +35,102 @@ describe('LiquidGlassText bridge', () => {
   it('checks native availability and sends literal text with upstream defaults', () => {
     const props = render({ text: 'welcome.key\n你好' });
     expect(assertComponentEnabled).toHaveBeenCalledWith('LiquidGlassText');
-    expect(JSON.parse(props.configuration)).toEqual({
+    expect(props.configuration).toEqual({
       text: 'welcome.key\n你好',
-      glass: 'clear',
+      effect: 'clear',
       interactive: false,
-      font: { style: 'body' },
       multilineTextAlignment: 'leading',
     });
     expect(props.accessibilityLabel).toBe('welcome.key\n你好');
     expect(props.accessibilityRole).toBe('text');
-    expect(StyleSheet.flatten(props.style)).toEqual({ width: 120, height: 40 });
+    expect(props.style).toBeUndefined();
   });
 
-  it('preserves supplied text, dynamic tint and font overrides', () => {
+  it('preserves supplied effect, interaction, dynamic tint and design', () => {
     const tint = DynamicColorIOS({ light: '#00ffff', dark: '#ff00ff' });
     const text = '你好，玻璃！';
     const props = render({
       text,
-      glass: { effect: 'regular', tint, interactive: true },
-      font: { size: 48, weight: 'bold', design: 'serif' },
-      fontWeight: 'heavy',
+      effect: 'regular',
+      tint,
+      interactive: true,
       fontDesign: 'rounded',
+      textStyle: { fontSize: 48, fontWeight: '800' },
       multilineTextAlignment: 'trailing',
       style: { width: 300 },
     });
-    expect(JSON.parse(props.configuration)).toEqual({
+    expect(props.configuration).toEqual({
       text,
-      glass: 'regular',
+      effect: 'regular',
       interactive: true,
-      font: { size: 48, weight: 'bold', design: 'serif' },
-      fontWeight: 'heavy',
       fontDesign: 'rounded',
+      textStyle: {
+        fontSize: 48,
+        fontWeight: 'heavy',
+      },
       multilineTextAlignment: 'trailing',
     });
     expect(props.tintColor).toBe(tint);
     expect(props.accessibilityLabel).toBe(text);
-    expect(StyleSheet.flatten(props.style)).toEqual({ width: 300, height: 40 });
+    expect(StyleSheet.flatten(props.style)).toEqual({ width: 300 });
   });
 
-  it('ignores stale native measurements after text changes', () => {
-    const oldProps = render({ text: 'Old' });
-    const props = render({ text: 'New', accessibilityLabel: 'Custom label' });
-    const size = { width: 240, height: 80 };
-    props.onContentSizeChange?.({
-      nativeEvent: { ...size, configuration: oldProps.configuration },
+  it('maps flattened React Native text styles to native configuration', () => {
+    const textStyle = StyleSheet.create({
+      glass: {
+        color: '#12AACC',
+        fontFamily: 'AvenirNext-DemiBold',
+        fontSize: 36,
+        fontStyle: 'italic',
+        fontWeight: '700',
+        letterSpacing: 1.5,
+        textAlign: 'center',
+      },
     });
-    expect(mockSetMeasurement).not.toHaveBeenCalled();
-    props.onContentSizeChange?.({
-      nativeEvent: { ...size, configuration: props.configuration },
+    const props = render({
+      text: 'Styled glass',
+      textStyle: [textStyle.glass, { fontSize: 40 }],
     });
-    const update = mockSetMeasurement.mock.calls[0]?.[0] as (
-      previous: typeof size
-    ) => typeof size;
-    expect(update({ width: 0, height: 0 })).toEqual(size);
-    expect(update(size)).toBe(size);
-    expect(props.accessibilityLabel).toBe('Custom label');
+
+    expect(props.configuration).toMatchObject({
+      textStyle: {
+        fontFamily: 'AvenirNext-DemiBold',
+        fontSize: 40,
+        fontStyle: 'italic',
+        fontWeight: 'bold',
+        letterSpacing: 1.5,
+      },
+      multilineTextAlignment: 'center',
+    });
+    expect(props.tintColor).toBe('#12AACC');
+  });
+
+  it('prefers dedicated alignment and tint over textStyle equivalents', () => {
+    const props = render({
+      text: 'Overrides',
+      tint: '#FFFFFF',
+      multilineTextAlignment: 'trailing',
+      textStyle: {
+        color: '#000000',
+        fontWeight: '300',
+        textAlign: 'center',
+      },
+    });
+
+    expect(props.configuration).toMatchObject({
+      textStyle: { fontWeight: 'light' },
+      multilineTextAlignment: 'trailing',
+    });
+    expect(props.tintColor).toBe('#FFFFFF');
   });
 
   it('resets tint and modifiers when they are removed', () => {
-    const props = render({ text: '', glass: 'identity' });
+    const props = render({ text: '', effect: 'identity' });
     expect(props.tintColor).toBeUndefined();
-    expect(JSON.parse(props.configuration)).toMatchObject({
+    expect(props.configuration).toMatchObject({
       text: '',
-      glass: 'identity',
+      effect: 'identity',
       interactive: false,
-      font: { style: 'body' },
     });
     expect(props.accessibilityLabel).toBe('');
   });

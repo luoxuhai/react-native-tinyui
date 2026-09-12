@@ -16,6 +16,7 @@ struct TinyuiTextOutlineShape: Shape {
     var ctFont: CTFont
     var fontSize: CGFloat
     var alignment: TextAlignment = .center
+    var letterSpacing: CGFloat = 0
 
     func path(in rect: CGRect) -> Path {
         // Split into explicit lines (no wrapping here)
@@ -25,9 +26,11 @@ struct TinyuiTextOutlineShape: Shape {
         var ctLines: [CTLine] = []
         ctLines.reserveCapacity(rawLines.count)
 
-        let attrKey = kCTFontAttributeName as NSAttributedString.Key
         for l in rawLines {
-            let attr = [attrKey: ctFont]
+            let attr: [NSAttributedString.Key: Any] = [
+                kCTFontAttributeName as NSAttributedString.Key: ctFont,
+                kCTKernAttributeName as NSAttributedString.Key: letterSpacing,
+            ]
             let astr = NSAttributedString(string: l, attributes: attr)
             let line = CTLineCreateWithAttributedString(astr)
             ctLines.append(line)
