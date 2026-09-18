@@ -1,116 +1,82 @@
-import SwiftUI
 import UIKit
 
 /**
- * UIKit bridge between the Fabric `TinyuiMenuView` component and the SwiftUI
- * `TinyuiMenuSwiftUIView`. Hosts the SwiftUI view through a
- * `UIHostingController`, mirroring react-native-pager-view's `PagerViewProvider`.
- *
- * The presenting view controller is supplied by the Objective-C++ component
- * view so this file does not depend on React.
+ * UIButton-backed UIKit menu trigger used as the Fabric component's content
+ * view. UIButton owns the UIMenu presentation and its long-press interaction.
  */
-@objc public class TinyuiMenuProvider: UIView {
+@objc public final class TinyuiMenuProvider: UIButton {
   private weak var delegate: TinyuiMenuViewDelegate?
-  private var hostingController: UIHostingController<TinyuiMenuSwiftUIView>?
-  private var props = TinyuiMenuProps()
 
-  /// Presenting view controller, resolved by the component view from its
-  /// React view controller hierarchy.
-  @objc public weak var parentViewController: UIViewController? {
-    didSet {
-      if window != nil {
-        setupView()
-      }
-    }
-  }
-
-  /// The React Native trigger view rendered as the menu's label.
   @objc public var triggerView: UIView? {
     didSet {
-      props.triggerView = triggerView
-    }
-  }
-
-  /// Menu configuration passed to the SwiftUI view.
-  @objc public var menuConfig: [String: Any] = [:] {
-    didSet {
-      props.menuConfig = menuConfig
-    }
-  }
-
-  @objc public var title: String = "" {
-    didSet {
-      props.title = title
-    }
-  }
-
-  @objc public var disabled: Bool = false {
-    didSet {
-      props.disabled = disabled
-    }
-  }
-
-  @objc public var hasPrimaryAction: Bool = false {
-    didSet {
-      props.hasPrimaryAction = hasPrimaryAction
+      guard oldValue !== triggerView else {
+        return
+      }
+      oldValue?.removeFromSuperview()
+      if let triggerView {
+        addSubview(triggerView)
+      }
+      setNeedsLayout()
     }
   }
 
   @objc public convenience init(delegate: TinyuiMenuViewDelegate) {
-    self.init()
+    self.init(frame: .zero)
     self.delegate = delegate
   }
 
-  override public func didMoveToWindow() {
-    super.didMoveToWindow()
-    if window != nil {
-      setupView()
-    }
+  override public init(frame: CGRect) {
+    super.init(frame: frame)
+    configure()
+  }
+
+  required init?(coder: NSCoder) {
+    super.init(coder: coder)
+    configure()
   }
 
   override public func layoutSubviews() {
     super.layoutSubviews()
-    if window != nil {
-      setupView()
+    triggerView?.frame = bounds
+    if let triggerView {
+      bringSubviewToFront(triggerView)
     }
   }
 
-  private func setupView() {
-    if hostingController != nil {
-      syncParentViewController()
+  override public func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+    guard !isHidden, alpha > 0.01, isEnabled, isUserInteractionEnabled,
+          self.point(inside: point, with: event) else {
+      return nil
+    }
+    return self
+  }
+
+  private func configure() {
+    backgroundColor = .clear
+    showsMenuAsPrimaryAction = true
+  }
+
+  /** Applies one complete Fabric props snapshot before rebuilding the menu. */
+  @objc public func update(
+    menuConfig: [String: Any],
+    title: String,
+    disabled: Bool
+  ) {
+    isEnabled = !disabled
+    isUserInteractionEnabled = !disabled
+
+    // UIButton enables its context menu interaction whenever a menu is assigned,
+    // independently of the control's enabled state. Remove it while disabled
+    // to block both primary-action and long-press presentation.
+    if disabled {
+      contextMenuInteraction?.dismissMenu()
+      menu = nil
       return
     }
 
-    guard let parentViewController else {
-      return
-    }
-
-    let hostingController = UIHostingController(
-      rootView: TinyuiMenuSwiftUIView(props: props, delegate: delegate)
+    menu = TinyuiMenuBuilder(delegate: delegate).buildMenu(
+      title: title,
+      config: menuConfig
     )
-    self.hostingController = hostingController
-
-    parentViewController.addChild(hostingController)
-    hostingController.view.backgroundColor = .clear
-    addSubview(hostingController.view)
-    hostingController.view.translatesAutoresizingMaskIntoConstraints = false
-    hostingController.view.pinEdges(to: self)
-    hostingController.didMove(toParent: parentViewController)
-  }
-
-  /// Keeps the hosting controller attached to the current view controller.
-  private func syncParentViewController(to parentViewController: UIViewController? = nil) {
-    guard
-      let hostingController,
-      let parentViewController = parentViewController ?? self.parentViewController,
-      hostingController.parent !== parentViewController
-    else {
-      return
-    }
-
-    hostingController.willMove(toParent: nil)
-    hostingController.removeFromParent()
-    parentViewController.addChild(hostingController)
-    hostingController.didMove(toParent: parentViewController)
   }
 }

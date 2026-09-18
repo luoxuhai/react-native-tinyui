@@ -1,6 +1,12 @@
 import NativeTinyui, { type Spec } from '../NativeTinyui';
 
-export type TinyuiComponent = 'Menu' | 'Popover' | 'LiquidGlassText';
+export type TinyuiComponent =
+  | 'Menu'
+  | 'Popover'
+  | 'LiquidGlassText'
+  | 'Stepper'
+  | 'ConcentricView'
+  | 'SFSymbol';
 
 let nativeTinyui: Spec | null | undefined;
 let enabledComponents: ReadonlySet<string> | undefined;

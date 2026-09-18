@@ -52,30 +52,18 @@ interface NativeMenuConfiguration {
   items: NativeMenuElement[];
 }
 
-export interface SerializedMenuOptions {
-  config: NativeMenuConfiguration;
-  callbacks: Map<string, () => void>;
-}
-
 function serializeColor(color: ColorValue | undefined): NativeMenuColor {
   return color === undefined ? undefined : processColor(color);
 }
 
 export function serializeMenuOptions(
   options: readonly MenuOption[]
-): SerializedMenuOptions {
-  const callbacks = new Map<string, () => void>();
-  const items = serializeOptions(options, callbacks, new Set(), 'root');
-
-  return {
-    callbacks,
-    config: { items },
-  };
+): NativeMenuConfiguration {
+  return { items: serializeOptions(options, new Set(), 'root') };
 }
 
 function serializeOptions(
   options: readonly MenuOption[],
-  callbacks: Map<string, () => void>,
   usedIds: Set<string>,
   path: string
 ): NativeMenuElement[] {
@@ -101,7 +89,6 @@ function serializeOptions(
         displayInline: option.displayInline ?? false,
         children: serializeOptions(
           option.options,
-          callbacks,
           usedIds,
           `${optionPath}.submenu`
         ),
@@ -114,7 +101,6 @@ function serializeOptions(
         title: option.title,
         children: serializeOptions(
           option.options,
-          callbacks,
           usedIds,
           `${optionPath}.section`
         ),
@@ -126,10 +112,6 @@ function serializeOptions(
       throw new Error(`Menu option id "${id}" must be unique within a menu.`);
     }
     usedIds.add(id);
-
-    if (option.onSelect) {
-      callbacks.set(id, option.onSelect);
-    }
 
     return {
       type: 'action',

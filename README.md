@@ -1,15 +1,16 @@
 # react-native-tinyui
 
-Dependency-free, native iOS `Menu`, `Popover` and `LiquidGlassText` components for React Native's
+Dependency-free, native iOS `Menu`, `Popover`, `Stepper`, `ConcentricView`, `SFSymbol` and `LiquidGlassText` components for React Native's
 New Architecture. The public API follows normal React composition patterns;
-the native UI is implemented with SwiftUI behind Fabric components.
+the native UI is exposed through Fabric components. `Menu`, `Popover`, `Stepper`, `ConcentricView` and `SFSymbol` are
+implemented directly with UIKit; `LiquidGlassText` uses SwiftUI where needed.
 
 The initial component behavior is inspired by
 [`@expo/ui`](https://github.com/expo/expo/tree/main/packages/expo-ui), but this
 package does not require Expo Modules or any other runtime package. The
-React Native ↔ SwiftUI bridge follows the approach used by
+React Native ↔ native view integration follows the approach used by
 [`react-native-pager-view`](https://github.com/callstack/react-native-pager-view):
-a Fabric component view hosts the SwiftUI view through a `UIHostingController`.
+a Fabric component owns the platform view that renders its content.
 
 ## Requirements
 
@@ -45,6 +46,9 @@ Available components:
 - `Menu`
 - `Popover`
 - `LiquidGlassText`
+- `Stepper`
+- `ConcentricView`
+- `SFSymbol`
 
 All components are enabled by default. Use an empty `components` array to
 compile only the TurboModule core. Run `pod install` again whenever this list
@@ -57,6 +61,9 @@ Component-specific JavaScript entry points are also available:
 import { Menu } from 'react-native-tinyui/menu';
 import { Popover } from 'react-native-tinyui/popover';
 import { LiquidGlassText } from 'react-native-tinyui/liquid-glass-text';
+import { Stepper } from 'react-native-tinyui/stepper';
+import { ConcentricView } from 'react-native-tinyui/concentric-view';
+import { SFSymbol } from 'react-native-tinyui/sf-symbol';
 ```
 
 The root `react-native-tinyui` imports remain supported for backwards
@@ -66,9 +73,8 @@ compatibility. JavaScript entry points provide cleaner dependency boundaries;
 ## Menu
 
 `Menu` uses `children` as its trigger and receives its native menu entries
-through the `options` prop. Without `onPrimaryAction`, a tap opens the menu.
-When `onPrimaryAction` is present, a tap invokes it and a long press opens the
-menu.
+through the `options` prop. A tap opens the native menu; `onActionPress`
+receives every selected action's stable id and displayed title.
 
 ```tsx
 import { Menu } from 'react-native-tinyui';
@@ -76,34 +82,40 @@ import { Menu } from 'react-native-tinyui';
 <Menu
   accessibilityLabel="Document actions"
   title="Document actions"
-  onPrimaryAction={() => openDocument()}
+  onActionPress={({ nativeEvent }) => {
+    if (nativeEvent.id === 'rename') rename();
+    if (nativeEvent.id === 'toggle-pinned') togglePinned();
+    if (nativeEvent.id === 'copy-link') copyLink();
+    if (nativeEvent.id === 'invite-people') invitePeople();
+    if (nativeEvent.id === 'remove') remove();
+  }}
   options={[
     {
+      id: 'rename',
       title: 'Rename',
       systemImage: 'square.and.pencil',
-      onSelect: rename,
     },
     {
+      id: 'toggle-pinned',
       title: 'Pinned',
       state: 'on',
       systemImage: 'pin',
-      onSelect: togglePinned,
     },
     {
       type: 'submenu',
       title: 'Share',
       systemImage: 'square.and.arrow.up',
       options: [
-        { title: 'Copy link', onSelect: copyLink },
-        { title: 'Invite people', onSelect: invitePeople },
+        { id: 'copy-link', title: 'Copy link' },
+        { id: 'invite-people', title: 'Invite people' },
       ],
     },
     { type: 'divider' },
     {
+      id: 'remove',
       title: 'Delete',
       destructive: true,
       systemImage: 'trash',
-      onSelect: remove,
     },
   ]}
 >
@@ -119,11 +131,14 @@ or `type: 'divider'` for structural entries; nested entries use their own
 simply render no image.
 
 Action options support `subtitle`, `state`, `destructive`, `disabled`, `hidden`,
-and `keepOpen`. Use `titleColor` to customize the title, or `icon` to load an
-image from the containing app's asset catalog; `iconColor` tints either an asset
-image or an SF Symbol. These colors accept React Native `ColorValue`s, including
-dynamic and semantic iOS colors. Submenus support the same label fields plus
-`destructive`, `disabled`, `hidden`, and `displayInline`.
+and `keepOpen`. Set explicit `id` values when handling `onActionPress`; actions
+without one receive a generated menu-path id. Use `icon` to load an image from
+the containing app's asset catalog; `iconColor` tints either an asset image or
+an SF Symbol and accepts React Native `ColorValue`s, including dynamic and
+semantic iOS colors. UIKit doesn't expose custom menu title colors, so the
+deprecated `titleColor` field is retained only for source compatibility; use
+`destructive` for system red styling. Submenus support the same label fields
+plus `destructive`, `disabled`, `hidden`, and `displayInline`.
 
 ## Popover
 
@@ -138,10 +153,9 @@ import { Popover, PopoverClose } from 'react-native-tinyui';
   defaultOpen={false}
   attachmentAnchor="bottom"
   arrowEdge="top"
-  contentSize={{ width: 320, height: 220 }}
   onOpenChange={(open) => console.log({ open })}
   content={({ close }) => (
-    <View style={styles.content}>
+    <View style={{ width: 280, padding: 20 }}>
       <Text>Any React Native content can be rendered here.</Text>
       <PopoverClose close={close} style={styles.doneButton}>
         <Text>Done</Text>
@@ -161,8 +175,15 @@ the `content` prop, which can be a node or a render function receiving
 as `Popover.Close`) renders a `Pressable` that calls `close` when pressed.
 
 Use `open` with `onOpenChange` for a controlled popover, or `defaultOpen` for an
-uncontrolled one. `contentSize` defaults to 320 × 240 points and can be updated
-while the popover is visible.
+uncontrolled one. The layout of `content` determines the popover's preferred
+size: set `width` and optionally `height` on its root view, or let its children
+determine the height. Size changes are applied while the popover is visible.
+UIKit may limit the displayed size to the available space on screen.
+
+Keep the content background transparent to show the native popover material:
+Liquid Glass on iOS 26+ when built with Xcode 26+, and the system popover
+appearance on earlier iOS versions. `style` on `Popover` styles the trigger's
+outer container, not the presented content.
 
 ## LiquidGlassText
 
@@ -229,6 +250,213 @@ their translated string directly.
 
 The adapted Core Text outline implementation retains the upstream MIT notice in
 [`ios/LiquidGlassText/GlassText-LICENSE`](ios/LiquidGlassText/GlassText-LICENSE).
+
+## Stepper
+
+`Stepper` bridges UIKit's
+[`UIStepper`](https://developer.apple.com/documentation/uikit/uistepper) through
+Fabric. It supports fractional steps, press-and-hold repeat, and wrapping at
+the bounds on iOS 17+.
+
+```tsx
+import { useState } from 'react';
+import { Stepper } from 'react-native-tinyui';
+
+function Quantity() {
+  const [quantity, setQuantity] = useState(1);
+  return (
+    <Stepper
+      accessibilityLabel="Quantity"
+      value={quantity}
+      minimumValue={1}
+      maximumValue={10}
+      onValueChange={setQuantity}
+    />
+  );
+}
+
+// Uncontrolled: UIKit owns the value after initialization.
+<Stepper defaultValue={2.5} stepValue={0.5} maximumValue={5} wraps />;
+```
+
+| Prop | Description | Default |
+| --- | --- | --- |
+| `value` | Controlled numeric value | — |
+| `defaultValue` | Initial value when uncontrolled; later changes are ignored | `0` |
+| `minimumValue` | Lower bound | `0` |
+| `maximumValue` | Upper bound, at least `minimumValue` | `100` |
+| `stepValue` | Positive increment/decrement amount | `1` |
+| `isContinuous` | Report changes during interaction; otherwise report on release | `true` |
+| `autorepeat` | Repeatedly step while holding a button | `true` |
+| `wraps` | Continue from the opposite bound when stepping past an end | `false` |
+| `disabled` | Prevent user interaction | `false` |
+| `onValueChange` | Callback receiving the new number after user interaction | — |
+
+When `value` is supplied, update it in `onValueChange` to accept changes. Keeping
+the same `value` restores the native control to that value. Omit `value` to let
+UIKit manage the state. Programmatic value or range changes do not call
+`onValueChange`.
+
+All numeric props must be finite, `stepValue` must be positive, and
+`maximumValue` must be at least `minimumValue`; invalid inputs throw a descriptive
+error. Values are clamped to the current range. Equal bounds produce a fixed
+value. Changing an uncontrolled range also clamps its current native value.
+
+The component accepts standard `ViewProps` (except `children`) and a native view
+ref. Native accessibility behavior is preserved; use `accessibilityLabel` to
+name the value being adjusted. Fabric measures the native control's intrinsic
+size. A larger `style` frame centers the native control without stretching
+its buttons. Put padding on a surrounding `View`. Like UIKit's control, the
+stepper shows the minus and plus buttons; render a separate `Text` for the value.
+
+## ConcentricView
+
+`ConcentricView` is a Fabric container that lets UIKit resolve its corner radii
+relative to its containing view. On iOS 26+, it applies
+[`UICornerRadius.containerConcentricRadius`](https://developer.apple.com/documentation/uikit/uicornerradius-c.class/containerconcentricradius)
+through `UIView.cornerConfiguration`. UIKit handles geometry and layout changes.
+Building this component requires **Xcode 26+**; on iOS 17–25 it uses
+`minimumRadius` as a fixed corner radius.
+
+```tsx
+import { Text } from 'react-native';
+import { ConcentricView } from 'react-native-tinyui';
+
+<ConcentricView
+  minimumRadius={32}
+  style={{ padding: 12, backgroundColor: '#DCEBFF' }}
+>
+  <ConcentricView
+    minimumRadius={12}
+    style={{ padding: 20, backgroundColor: '#3875D5' }}
+  >
+    <Text>UIKit resolves each corner.</Text>
+  </ConcentricView>
+</ConcentricView>;
+```
+
+`minimumRadius` defaults to `0` and must be finite and nonnegative. It only
+controls the fixed fallback radius before iOS 26; iOS 26+ resolves corners
+entirely through UIKit, without a minimum radius. The component accepts
+`children`, standard `ViewProps`, and a native view ref. It clips content
+by default; use `style={{ overflow: 'visible' }}` to allow overflow. Avoid
+`style.borderRadius` and individual corner radii on this component.
+React Native's custom border, outline, and shadow drawing does not calculate
+concentric radii; keep those decorations on a surrounding view when needed.
+
+## SFSymbol
+
+`SFSymbol` uses **UIKit `UIImageView` + Apple's Symbols framework**, exposed
+through Fabric. It does not embed a SwiftUI hosting view. Xcode 26+ is required
+to build; the deployment target remains iOS 17. Yoga measures the configured
+symbol's natural size, so `style.width` and `style.height` are optional.
+
+```tsx
+import { useState } from 'react';
+import { Button, PlatformColor, View } from 'react-native';
+import { SFSymbol } from 'react-native-tinyui';
+
+function Favorite() {
+  const [selected, setSelected] = useState(false);
+  const [trigger, setTrigger] = useState(0);
+  return (
+    <View>
+      <SFSymbol
+        name={selected ? 'heart.fill' : 'heart'}
+        size={32}
+        weight="semibold"
+        renderingMode="hierarchical"
+        color={PlatformColor('systemPinkColor')}
+        effect={{ type: 'bounce', trigger, options: { repeat: false } }}
+        contentTransition={{ type: 'magicReplace', direction: 'downUp' }}
+      />
+      <Button title="Favorite" onPress={() => {
+        setSelected(!selected);
+        setTrigger(trigger + 1);
+      }} />
+    </View>
+  );
+}
+```
+
+### Image configuration
+
+| Prop | Values / behavior |
+| --- | --- |
+| `name` | Required complete symbol name, including variants such as `square.fill`. Missing symbols render empty. |
+| `source` | `system` (default), or `asset` for a custom SF Symbol in the app's asset catalog. Ordinary bitmap assets are not accepted. |
+| `size` | Positive point size; default `17`. |
+| `weight` | `unspecified` (default), `ultraLight`, `thin`, `light`, `regular`, `medium`, `semibold`, `bold`, `heavy`, `black`. |
+| `scale` | `default`, `unspecified`, `small`, `medium`, `large`. |
+| `textStyle` | `extraLargeTitle`, `extraLargeTitle2`, `largeTitle`, `title1`–`title3`, `headline`, `subheadline`, `body`, `callout`, `footnote`, `caption1`, `caption2`. Overrides `size` and supplies the style's weight unless explicitly set. |
+| `fontFamily` | Font/PostScript name used to derive symbol metrics; unknown fonts use system metrics. |
+| `allowFontScaling` | Default `true`. Scales the base point size by React Native's `fontScale`, including when using `textStyle`. |
+| `maxFontSizeMultiplier` | Cap on that scale, >= 1. Omitted or `0` means unlimited. |
+| `renderingMode` | `automatic` (default), `monochrome`, `hierarchical`, `palette`, `multicolor`. |
+| `color` | React Native `ColorValue`, including `PlatformColor` and `DynamicColorIOS`. Defaults to semantic label color. |
+| `paletteColors` | One to three `ColorValue`s in primary, secondary, tertiary order, used in palette mode. If omitted, the palette uses `color`. |
+| `variableValue` | Progress from `0` to `1`; omitted uses the symbol default. Requires a symbol with variable annotations. |
+| `variableValueMode` | `automatic` (default), `color`, `draw` (iOS 26+). |
+| `colorRenderingMode` | `automatic` (default), `flat`, `gradient` (iOS 26+). |
+| `resizeMode` | `center` (default, natural point size), `contain`, `cover`, `stretch`, for explicitly sized frames. Use `style.overflow: 'hidden'` to clip. |
+
+Standard `ViewProps`, styles and refs are supported. Symbols are decorative
+(`accessible={false}`) by default; supply `accessible` and a meaningful
+`accessibilityLabel` for standalone images. Use a `Pressable` for interactive icons.
+
+### Preset effects
+
+Pass one object to `effect`, or an array of **distinct** effect types to combine
+compatible effects. UIKit determines how combined effects interact.
+
+| `type` | Configuration | Minimum iOS |
+| --- | --- | --- |
+| `bounce`, `scale`, `appear`, `disappear` | `direction: 'up' \| 'down'`, `scope` | 17 |
+| `pulse` | `scope` | 17 |
+| `variableColor` | `iteration: 'iterative' \| 'cumulative'`, `reversing: boolean`, `inactiveLayers: 'hide' \| 'dim'` | 17 |
+| `wiggle` | `direction: 'up' \| 'down' \| 'left' \| 'right' \| 'forward' \| 'backward' \| 'clockwise' \| 'counterClockwise'`, or `angle` in degrees clockwise from +x; `scope` | 18 |
+| `rotate` | `direction: 'clockwise' \| 'counterClockwise'`, `scope` | 18 |
+| `breathe` | `style: 'plain' \| 'pulse'`, `scope` | 18 |
+| `drawOn` | `scope`, also accepting `individually` | 26 |
+| `drawOff` | `scope`, also accepting `individually`; `reversed: boolean` | 26 |
+
+`scope` is `byLayer` or `wholeSymbol`; omit any modifier to keep Apple's default.
+Each preset also accepts:
+
+- `active` (default `true`): apply/remove the effect. Scale and visibility
+  effects hold their state until removed. Disappear/Draw Off can hide the symbol.
+- `trigger`: a number or string. Change it to replay an effect. Mounting or
+  changing effect configuration also applies it; unrelated rerenders do not.
+- `animated` (default `true`): animate application/removal of the effect.
+- `options.speed`: positive speed multiplier, default system speed.
+- `options.repeat`: a positive integer play count, `'forever'`, or `false` for
+  one play. Omit to use the preset's native repetition behavior.
+- `options.repeatBehavior`: `periodic` or `continuous` (iOS 18+).
+  Continuous repeats forever and cannot be combined with a count or delay.
+- `options.repeatDelay`: nonnegative delay in seconds between periodic plays
+  (iOS 18+). Without a count, periodic/delayed repetition continues indefinitely.
+
+Repetition options only affect presets that support repeating. For example,
+`scale` is a held state, not a looping animation. Removing `effect` clears all
+effects. Detached/recycled views stop animations; reattaching applies them again.
+
+### Replacement transitions and compatibility
+
+`contentTransition` animates changes to the name or image configuration. It
+accepts `type: 'automatic' | 'replace' | 'magicReplace'`, optional
+`direction: 'downUp' | 'upUp' | 'offUp'`, `scope: 'byLayer' | 'wholeSymbol'`, and
+a positive `speed`. Direction and scope configure Replace and the Magic Replace
+fallback; Automatic uses the system transition. The initial image is not transitioned.
+
+Unsupported presets are ignored on earlier iOS versions. Magic Replace falls
+back to the configured Replace before iOS 18. Continuous repetition falls back
+to periodic repetition on iOS 17; custom repeat delay is ignored. Before iOS 26,
+variable mode and gradient configuration are ignored. Actual animation, palette,
+multicolor and variable/draw support depend on each symbol's native annotations.
+
+`respectReduceMotion` defaults to `true`: repeating/discrete effects and content
+transitions are suppressed while Reduce Motion is enabled, while scale and
+visibility state changes apply instantly. Set it to `false` to opt out.
 
 ## Contributing
 

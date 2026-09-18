@@ -27,6 +27,8 @@ export interface PopoverProps extends Omit<ViewProps, 'children'> {
   /**
    * Content shown inside the popover. Pass a node, or a render function that
    * receives `{ close }` to dismiss the popover from within the content.
+   * The content's layout determines the popover size, including live updates.
+   * Leave its background transparent to reveal the system popover material.
    */
   content: PopoverContent;
   /** Controlled presentation state. */

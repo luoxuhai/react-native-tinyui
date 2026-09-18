@@ -1,6 +1,6 @@
 import { forwardRef, useCallback, useState, type ComponentRef } from 'react';
 import type { ReactNode } from 'react';
-import { PlatformColor, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { assertComponentEnabled } from '../utils';
 import { PopoverClose } from './PopoverClose';
@@ -59,7 +59,11 @@ const PopoverRoot = forwardRef<ComponentRef<typeof View>, PopoverProps>(
           }}
         >
           <Pressable onPress={() => setOpen(true)}>{children}</Pressable>
-          <View style={styles.content} pointerEvents="box-none">
+          <View
+            collapsable={false}
+            style={styles.content}
+            pointerEvents="box-none"
+          >
             {renderedContent}
           </View>
         </NativePopoverView>
@@ -78,7 +82,8 @@ function renderContent(
 const styles = StyleSheet.create({
   content: {
     position: 'absolute',
-    backgroundColor: PlatformColor('systemBackground'),
+    top: 0,
+    left: 0,
     overflow: 'hidden',
   },
 });

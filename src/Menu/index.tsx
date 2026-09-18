@@ -11,7 +11,7 @@ const MenuRoot = forwardRef<ComponentRef<typeof View>, MenuProps>(function Menu(
     accessibilityLabel,
     children,
     disabled,
-    onPrimaryAction,
+    onActionPress,
     options,
     title,
     testID,
@@ -21,17 +21,15 @@ const MenuRoot = forwardRef<ComponentRef<typeof View>, MenuProps>(function Menu(
 ) {
   assertComponentEnabled('Menu');
 
-  const { config, callbacks } = serializeMenuOptions(options);
+  const menuConfig = serializeMenuOptions(options);
 
   return (
     <View {...viewProps} ref={ref} collapsable={false}>
       <NativeMenuView
         accessibilityLabel={accessibilityLabel}
         disabled={disabled}
-        hasPrimaryAction={onPrimaryAction != null}
-        menuConfig={config}
-        onItemPress={(event) => callbacks.get(event.nativeEvent.id)?.()}
-        onPrimaryAction={onPrimaryAction}
+        menuConfig={menuConfig}
+        onActionPress={onActionPress}
         testID={testID}
         title={title}
       >
@@ -45,6 +43,8 @@ export const Menu = MenuRoot as MenuComponent;
 
 export type {
   MenuActionOption,
+  MenuActionPressEvent,
+  MenuActionPressEventData,
   MenuDividerOption,
   MenuItemState,
   MenuOption,

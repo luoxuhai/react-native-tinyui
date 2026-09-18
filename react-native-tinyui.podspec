@@ -19,6 +19,21 @@ components = {
     :definition => "TINYUI_FEATURE_LIQUID_GLASS_TEXT=1",
     :frameworks => ["UIKit", "SwiftUI", "CoreText"],
   },
+  "Stepper" => {
+    :source_files => "ios/Stepper/**/*.{h,m,mm,swift,cpp}",
+    :definition => "TINYUI_FEATURE_STEPPER=1",
+    :frameworks => ["UIKit"],
+  },
+  "ConcentricView" => {
+    :source_files => "ios/ConcentricView/**/*.{h,m,mm,swift,cpp}",
+    :definition => "TINYUI_FEATURE_CONCENTRIC_VIEW=1",
+    :frameworks => ["UIKit"],
+  },
+  "SFSymbol" => {
+    :source_files => "ios/SFSymbol/**/*.{h,m,mm,swift,cpp}",
+    :definition => "TINYUI_FEATURE_SF_SYMBOL=1",
+    :frameworks => ["UIKit", "Symbols"],
+  },
 }
 
 configured_components = nil
@@ -68,7 +83,8 @@ definitions = selected_components.map { |component| component[:definition] }
 frameworks = selected_components.flat_map { |component| component.fetch(:frameworks, []) }.uniq
 
 Pod::Spec.new do |s|
-  s.name         = "Tinyui"
+  s.name         = "react-native-tinyui"
+  s.module_name  = "Tinyui"
   s.version      = package["version"]
   s.summary      = package["description"]
   s.homepage     = package["homepage"]
@@ -79,7 +95,7 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/luoxuhai/react-native-tinyui.git", :tag => "#{s.version}" }
 
   s.source_files = source_files
-  s.private_header_files = ["ios/Core/**/*.h", "ios/Menu/**/*.h", "ios/Popover/**/*.h", "ios/LiquidGlassText/**/*.h"]
+  s.private_header_files = ["ios/Core/**/*.h", "ios/Menu/**/*.h", "ios/Popover/**/*.h", "ios/LiquidGlassText/**/*.h", "ios/Stepper/**/*.h", "ios/ConcentricView/**/*.h", "ios/SFSymbol/**/*.h"]
   s.preserve_paths = "ios/LiquidGlassText/GlassText-LICENSE"
   s.swift_version = "5.0"
   s.frameworks = frameworks unless frameworks.empty?

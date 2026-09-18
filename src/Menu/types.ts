@@ -17,7 +17,11 @@ interface MenuOptionLabel {
   icon?: string;
   /** Tint applied to `icon` or `systemImage`. */
   iconColor?: ColorValue;
-  /** Foreground color applied to the option title. */
+  /**
+   * Retained for source compatibility. UIKit menu elements don't expose a
+   * public custom title-color API; use `destructive` for system red styling.
+   * @deprecated UIKit ignores custom menu title colors.
+   */
   titleColor?: ColorValue;
 }
 
@@ -32,7 +36,6 @@ export interface MenuActionOption extends MenuOptionLabel {
   hidden?: boolean;
   /** Keep the menu visible after selection on iOS 16 and newer. */
   keepOpen?: boolean;
-  onSelect?: () => void;
 }
 
 export interface MenuSubmenuOption extends MenuOptionLabel {
@@ -61,6 +64,17 @@ export interface MenuDividerOption {
 export type MenuOption =
   MenuActionOption | MenuSubmenuOption | MenuSectionOption | MenuDividerOption;
 
+export interface MenuActionPressEventData {
+  /** The selected action's explicit id, or its generated menu-path id. */
+  id: string;
+  /** The selected action's displayed title. */
+  title: string;
+}
+
+export type MenuActionPressEvent = Readonly<{
+  nativeEvent: Readonly<MenuActionPressEventData>;
+}>;
+
 export interface MenuProps extends Omit<ViewProps, 'children'> {
   /** The trigger element. */
   children: ReactNode;
@@ -70,8 +84,8 @@ export interface MenuProps extends Omit<ViewProps, 'children'> {
   options: readonly MenuOption[];
   /** Prevents the trigger from opening the menu. */
   disabled?: boolean;
-  /** Called on a normal tap. When set, a long press opens the menu. */
-  onPrimaryAction?: () => void;
+  /** Called whenever an enabled action is selected. */
+  onActionPress?: (event: MenuActionPressEvent) => void;
 }
 
 export interface MenuComponent extends ForwardRefExoticComponent<

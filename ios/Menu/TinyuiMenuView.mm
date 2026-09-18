@@ -3,7 +3,6 @@
 #import "TinyuiMenuView.h"
 
 #import <React/RCTConversions.h>
-#import <React/UIView+React.h>
 #import <react/utils/FollyConvert.h>
 
 #import <react/renderer/components/TinyuiSpec/ComponentDescriptors.h>
@@ -44,24 +43,15 @@ using namespace facebook::react;
   return self;
 }
 
-- (void)didMoveToWindow
-{
-  [super didMoveToWindow];
-  if (self.window != nil) {
-    _menuProvider.parentViewController = [self reactViewController];
-  }
-}
-
 #pragma mark - React lifecycle
 
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
                           index:(NSInteger)index
 {
-  // TinyuiMenuView renders its trigger as a child; we hand it to the
-  // provider, which uses it as the SwiftUI `Menu` label.
+  // TinyuiMenuView renders its trigger as a child; the UIButton-backed
+  // provider uses it as the menu's visual content.
   _triggerView = childComponentView;
   _menuProvider.triggerView = childComponentView;
-  [_menuProvider addSubview:childComponentView];
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
@@ -82,17 +72,12 @@ using namespace facebook::react;
   const auto &oldMenuProps = *std::static_pointer_cast<TinyuiMenuViewProps const>(_props);
   const auto &newMenuProps = *std::static_pointer_cast<TinyuiMenuViewProps const>(props);
 
-  if (oldMenuProps.menuConfig != newMenuProps.menuConfig) {
-    _menuProvider.menuConfig = convertFollyDynamicToId(newMenuProps.menuConfig);
-  }
-  if (oldMenuProps.title != newMenuProps.title) {
-    _menuProvider.title = RCTNSStringFromString(newMenuProps.title);
-  }
-  if (oldMenuProps.hasPrimaryAction != newMenuProps.hasPrimaryAction) {
-    _menuProvider.hasPrimaryAction = newMenuProps.hasPrimaryAction;
-  }
-  if (oldMenuProps.disabled != newMenuProps.disabled) {
-    _menuProvider.disabled = newMenuProps.disabled;
+  if (oldMenuProps.menuConfig != newMenuProps.menuConfig ||
+      oldMenuProps.title != newMenuProps.title ||
+      oldMenuProps.disabled != newMenuProps.disabled) {
+    [_menuProvider updateWithMenuConfig:convertFollyDynamicToId(newMenuProps.menuConfig)
+                                 title:RCTNSStringFromString(newMenuProps.title)
+                              disabled:newMenuProps.disabled];
   }
 
   [super updateProps:props oldProps:oldProps];
@@ -100,23 +85,15 @@ using namespace facebook::react;
 
 #pragma mark - TinyuiMenuViewDelegate
 
-- (void)onItemPressWithId:(NSString *)identifier
+- (void)onActionPressWithId:(NSString *)identifier title:(NSString *)title
 {
   if (_eventEmitter == nullptr) {
     return;
   }
   std::static_pointer_cast<const TinyuiMenuViewEventEmitter>(_eventEmitter)
-      ->onItemPress(TinyuiMenuViewEventEmitter::OnItemPress{
-          .id = std::string(identifier.UTF8String ?: "")});
-}
-
-- (void)onPrimaryAction
-{
-  if (_eventEmitter == nullptr) {
-    return;
-  }
-  std::static_pointer_cast<const TinyuiMenuViewEventEmitter>(_eventEmitter)
-      ->onPrimaryAction(TinyuiMenuViewEventEmitter::OnPrimaryAction{});
+      ->onActionPress(TinyuiMenuViewEventEmitter::OnActionPress{
+          .id = std::string(identifier.UTF8String ?: ""),
+          .title = std::string(title.UTF8String ?: "")});
 }
 
 @end

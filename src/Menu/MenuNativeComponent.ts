@@ -9,9 +9,7 @@ export interface NativeMenuProps extends ViewProps {
   menuConfig: CodegenTypes.UnsafeMixed;
   title?: string;
   disabled?: boolean;
-  hasPrimaryAction?: boolean;
-  onItemPress?: DirectEventHandler<Readonly<{ id: string }>>;
-  onPrimaryAction?: DirectEventHandler<null>;
+  onActionPress?: DirectEventHandler<Readonly<{ id: string; title: string }>>;
 }
 
 export default codegenNativeComponent<NativeMenuProps>('TinyuiMenuView', {

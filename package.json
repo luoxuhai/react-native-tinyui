@@ -1,7 +1,7 @@
 {
   "name": "react-native-tinyui",
   "version": "0.5.0",
-  "description": "Dependency-free native iOS Menu, Popover and LiquidGlassText components for React Native",
+  "description": "Dependency-free native iOS Menu, Popover, Stepper, ConcentricView, SFSymbol and LiquidGlassText components for React Native",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
@@ -19,6 +19,21 @@
       "react-native-tinyui-source": "./src/Popover/index.tsx",
       "types": "./lib/typescript/src/Popover/index.d.ts",
       "default": "./lib/module/Popover/index.js"
+    },
+    "./stepper": {
+      "react-native-tinyui-source": "./src/Stepper/index.tsx",
+      "types": "./lib/typescript/src/Stepper/index.d.ts",
+      "default": "./lib/module/Stepper/index.js"
+    },
+    "./concentric-view": {
+      "react-native-tinyui-source": "./src/ConcentricView/index.tsx",
+      "types": "./lib/typescript/src/ConcentricView/index.d.ts",
+      "default": "./lib/module/ConcentricView/index.js"
+    },
+    "./sf-symbol": {
+      "react-native-tinyui-source": "./src/SFSymbol/index.tsx",
+      "types": "./lib/typescript/src/SFSymbol/index.d.ts",
+      "default": "./lib/module/SFSymbol/index.js"
     },
     "./package.json": "./package.json",
     "./liquid-glass-text": {
@@ -52,6 +67,7 @@
     "ios",
     "menu",
     "popover",
+    "stepper",
     "fabric",
     "liquid-glass"
   ],
@@ -78,6 +94,7 @@
     "@react-native/jest-preset": "0.85.0",
     "@release-it/conventional-changelog": "^11.0.1",
     "@types/react": "^19.2.0",
+    "@types/react-test-renderer": "^19.1.0",
     "del-cli": "^7.0.0",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
@@ -88,6 +105,7 @@
     "react": "19.2.3",
     "react-native": "0.85.0",
     "react-native-builder-bob": "^0.43.0",
+    "react-test-renderer": "19.2.3",
     "release-it": "^20.2.0",
     "turbo": "^2.9.16",
     "typescript": "^6.0.3"
@@ -137,6 +155,15 @@
         },
         "TinyuiLiquidGlassTextView": {
           "className": "TinyuiLiquidGlassTextView"
+        },
+        "TinyuiStepperView": {
+          "className": "TinyuiStepperView"
+        },
+        "TinyuiConcentricView": {
+          "className": "TinyuiConcentricView"
+        },
+        "TinyuiSFSymbolView": {
+          "className": "TinyuiSFSymbolView"
         }
       }
     }

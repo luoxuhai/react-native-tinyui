@@ -3,6 +3,8 @@
 #import "TinyuiPopoverView.h"
 
 #import <React/RCTConversions.h>
+#import <React/RCTMountingTransactionObserving.h>
+#import <React/RCTSurfaceTouchHandler.h>
 #import <React/UIView+React.h>
 
 #import <react/renderer/components/TinyuiSpec/ComponentDescriptors.h>
@@ -18,13 +20,16 @@
 
 using namespace facebook::react;
 
-@interface TinyuiPopoverView () <RCTTinyuiPopoverViewViewProtocol, TinyuiPopoverViewDelegate>
+@interface TinyuiPopoverView () <RCTTinyuiPopoverViewViewProtocol,
+                                TinyuiPopoverViewDelegate,
+                                RCTMountingTransactionObserving>
 @end
 
 @implementation TinyuiPopoverView {
   TinyuiPopoverProvider *_popoverProvider;
   UIView *_triggerView;
   UIView<RCTComponentViewProtocol> *_contentComponentView;
+  RCTSurfaceTouchHandler *_contentTouchHandler;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
@@ -39,6 +44,7 @@ using namespace facebook::react;
     _props = defaultProps;
 
     _popoverProvider = [[TinyuiPopoverProvider alloc] initWithDelegate:self];
+    _contentTouchHandler = [RCTSurfaceTouchHandler new];
     self.contentView = _popoverProvider;
   }
   return self;
@@ -68,6 +74,8 @@ using namespace facebook::react;
   // Second child is the popover content, presented inside the popover.
   NSAssert(_contentComponentView == nil, @"TinyuiPopoverView accepts one content child.");
   _contentComponentView = childComponentView;
+  // The popover is outside the React surface's native view hierarchy.
+  [_contentTouchHandler attachToView:childComponentView];
   _popoverProvider.contentView = childComponentView;
 }
 
@@ -79,9 +87,21 @@ using namespace facebook::react;
     _triggerView = nil;
     _popoverProvider.triggerView = nil;
   } else if (_contentComponentView == childComponentView) {
+    [_contentTouchHandler detachFromView:childComponentView];
     _contentComponentView = nil;
     _popoverProvider.contentView = nil;
   }
+}
+
+- (void)mountingTransactionDidMount:(const MountingTransaction &)transaction
+               withSurfaceTelemetry:(const SurfaceTelemetry &)surfaceTelemetry
+{
+  // Content can change size without changing the trigger's layout or props.
+  // Read only after Fabric has applied the entire transaction. UIKit must not
+  // resize this child, so its bounds remain the size computed by Yoga.
+  _popoverProvider.contentSize = _contentComponentView != nil
+      ? _contentComponentView.bounds.size
+      : CGSizeZero;
 }
 
 #pragma mark - Props
@@ -112,10 +132,15 @@ using namespace facebook::react;
 
 - (void)prepareForRecycle
 {
+  _popoverProvider.isPresented = NO;
+  if (_contentComponentView != nil) {
+    [_contentTouchHandler detachFromView:_contentComponentView];
+  }
   _triggerView = nil;
   _contentComponentView = nil;
   _popoverProvider.triggerView = nil;
   _popoverProvider.contentView = nil;
+  _popoverProvider.parentViewController = nil;
   [super prepareForRecycle];
 }
 

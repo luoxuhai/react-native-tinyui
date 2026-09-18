@@ -1,13 +1,12 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 import { DynamicColorIOS, PlatformColor } from 'react-native';
 
 import { serializeMenuOptions } from '../options';
 
 describe('Menu options', () => {
-  it('serializes nested options and keeps callbacks in JavaScript', () => {
-    const onSelect = jest.fn();
-    const parsed = serializeMenuOptions([
-      { id: 'rename', title: 'Rename', onSelect },
+  it('serializes nested options and stable action ids', () => {
+    const config = serializeMenuOptions([
+      { id: 'rename', title: 'Rename' },
       { type: 'divider' },
       {
         type: 'submenu',
@@ -16,7 +15,7 @@ describe('Menu options', () => {
       },
     ]);
 
-    expect(parsed.config).toEqual({
+    expect(config).toEqual({
       items: [
         expect.objectContaining({
           id: 'rename',
@@ -30,9 +29,6 @@ describe('Menu options', () => {
         }),
       ],
     });
-
-    parsed.callbacks.get('rename')?.();
-    expect(onSelect).toHaveBeenCalledTimes(1);
   });
 
   it('rejects duplicate explicit item ids', () => {
@@ -45,7 +41,7 @@ describe('Menu options', () => {
   });
 
   it('serializes visual, state, and inline submenu options', () => {
-    const parsed = serializeMenuOptions([
+    const config = serializeMenuOptions([
       {
         id: 'selected',
         title: 'Selected',
@@ -71,7 +67,7 @@ describe('Menu options', () => {
       },
     ]);
 
-    expect(parsed.config).toEqual({
+    expect(config).toEqual({
       items: [
         {
           id: 'selected',
@@ -101,7 +97,7 @@ describe('Menu options', () => {
   });
 
   it('preserves semantic and dynamic ColorValues', () => {
-    const parsed = serializeMenuOptions([
+    const config = serializeMenuOptions([
       {
         title: 'Adaptive colors',
         titleColor: PlatformColor('label'),
@@ -111,7 +107,7 @@ describe('Menu options', () => {
         }),
       },
     ]);
-    expect(parsed.config.items[0]).toMatchObject({
+    expect(config.items[0]).toMatchObject({
       titleColor: { semantic: ['label'] },
       iconColor: {
         dynamic: {

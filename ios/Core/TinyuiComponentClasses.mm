@@ -35,6 +35,24 @@ TINYUI_DISABLED_COMPONENT(TinyuiPopoverView, TinyuiPopoverViewComponentDescripto
 TINYUI_DISABLED_COMPONENT(TinyuiLiquidGlassTextView, TinyuiLiquidGlassTextViewComponentDescriptor)
 #endif
 
+#if TINYUI_FEATURE_STEPPER
+#import "TinyuiStepperView.h"
+#else
+TINYUI_DISABLED_COMPONENT(TinyuiStepperView, TinyuiStepperViewComponentDescriptor)
+#endif
+
+#if TINYUI_FEATURE_CONCENTRIC_VIEW
+#import "TinyuiConcentricView.h"
+#else
+TINYUI_DISABLED_COMPONENT(TinyuiConcentricView, TinyuiConcentricViewComponentDescriptor)
+#endif
+
+#if TINYUI_FEATURE_SF_SYMBOL
+#import "TinyuiSFSymbolView.h"
+#else
+TINYUI_DISABLED_COMPONENT(TinyuiSFSymbolView, TinyuiSFSymbolViewComponentDescriptor)
+#endif
+
 #undef TINYUI_DISABLED_COMPONENT
 
 Class<RCTComponentViewProtocol> TinyuiMenuViewCls(void)
@@ -50,4 +68,19 @@ Class<RCTComponentViewProtocol> TinyuiPopoverViewCls(void)
 Class<RCTComponentViewProtocol> TinyuiLiquidGlassTextViewCls(void)
 {
   return TinyuiLiquidGlassTextView.class;
+}
+
+Class<RCTComponentViewProtocol> TinyuiStepperViewCls(void)
+{
+  return TinyuiStepperView.class;
+}
+
+Class<RCTComponentViewProtocol> TinyuiConcentricViewCls(void)
+{
+  return TinyuiConcentricView.class;
+}
+
+Class<RCTComponentViewProtocol> TinyuiSFSymbolViewCls(void)
+{
+  return TinyuiSFSymbolView.class;
 }
