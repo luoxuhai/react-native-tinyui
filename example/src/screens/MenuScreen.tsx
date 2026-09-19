@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TouchableHighlight,
   View,
 } from 'react-native';
 import {
@@ -233,6 +234,8 @@ export function MenuScreen() {
         changing any counter. Tap again to count a normal press.
       </Text>
 
+      <NestedMenuExample kind="Pressable" disabled={disabled} />
+
       <ControlPanel>
         <Setting
           title="Composition"
@@ -306,7 +309,71 @@ export function MenuScreen() {
   );
 }
 
+function NestedMenuExample({
+  kind,
+  disabled,
+}: {
+  kind: 'Pressable' | 'TouchableHighlight';
+  disabled: boolean;
+}) {
+  const menuRef = useRef<MenuRef>(null);
+  const [pressInCount, setPressInCount] = useState(0);
+  const [pressCount, setPressCount] = useState(0);
+  const [lastAction, setLastAction] = useState('None');
+  const Container = kind === 'Pressable' ? Pressable : TouchableHighlight;
+
+  return (
+    <View style={styles.section}>
+      <Container
+        testID={`menu-parent-${kind}`}
+        disabled={disabled}
+        onPressIn={() => setPressInCount((count) => count + 1)}
+        onPress={() => {
+          setPressCount((count) => count + 1);
+          menuRef.current?.open();
+        }}
+        style={styles.nestedParent}
+      >
+        <View style={styles.nestedRow}>
+          <Text style={playgroundStyles.caption}>{kind} parent</Text>
+          <Menu
+            ref={menuRef}
+            disabled={disabled}
+            options={basicOptions}
+            onActionPress={({ nativeEvent }) =>
+              setLastAction(nativeEvent.title)
+            }
+            testID={`menu-nested-${kind}`}
+          >
+            <View style={playgroundStyles.trigger}>
+              <Text style={playgroundStyles.triggerLabel}>Actions</Text>
+            </View>
+          </Menu>
+        </View>
+      </Container>
+      <Text style={playgroundStyles.caption}>
+        {`Parent in: ${pressInCount} · Press: ${pressCount} · Action: ${lastAction}`}
+      </Text>
+      <Text style={playgroundStyles.caption}>
+        Tap the parent label to open the menu (iOS 17.4+). Tap Actions to open
+        it directly without changing the parent counters.
+      </Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  nestedParent: {
+    borderRadius: 12,
+    backgroundColor: PlatformColor('secondarySystemGroupedBackgroundColor'),
+  },
+  nestedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    gap: 12,
+  },
   stage: {
     borderRadius: 26,
     padding: 20,

@@ -64,6 +64,21 @@ using namespace facebook::react;
   }
 }
 
+#pragma mark - Touch handling
+
+- (SharedTouchEventEmitter)touchEventEmitterAtPoint:(CGPoint)point
+{
+  // The provider's hitTest returns its UIButton, so the surface touch handler
+  // finds this Fabric view first. Keep the trigger's touch sequence in UIKit:
+  // forwarding it to JS lets an ancestor Pressable/Touchable claim the same
+  // touch and run its press callbacks while the native menu is opening.
+  if (_menuProvider.isEnabled) {
+    return nullptr;
+  }
+
+  return [super touchEventEmitterAtPoint:point];
+}
+
 #pragma mark - Commands
 
 - (void)handleCommand:(const NSString *)commandName args:(const NSArray *)args

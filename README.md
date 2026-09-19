@@ -165,6 +165,10 @@ or `type: 'divider'` for structural entries; nested entries use their own
 `options` array. SF Symbols are passed with `systemImage`; missing symbols
 simply render no image.
 
+The trigger can be nested inside a React Native `Pressable` or `Touchable`.
+Tapping an enabled menu trigger opens the menu without firing the parent's
+touch or press handlers; tapping elsewhere in the parent keeps its normal behavior.
+
 To open the menu from another control, call `open()` on its ref:
 
 ```tsx
