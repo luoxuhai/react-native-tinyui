@@ -1,3 +1,5 @@
+<img src="./assets/banner.png" alt="TinyUI — Native iOS components for React Native" width="100%" />
+
 # react-native-tinyui
 
 A dependency-free collection of native iOS components for React Native's New
@@ -6,13 +8,15 @@ staying close to native APIs. It uses UIKit by default and SwiftUI where needed.
 
 ## Components
 
-- [Menu](#menu)
-- [Popover](#popover)
-- [TipKit](#tipkit)
-- [LiquidGlassText](#liquidglasstext)
-- [Stepper](#stepper)
-- [ConcentricView](#concentricview)
-- [SFSymbol](#sfsymbol)
+| Component                          | What it does                                                   |
+| ---------------------------------- | -------------------------------------------------------------- |
+| [Menu](#menu)                      | Present native menus with actions, submenus, and sections       |
+| [Popover](#popover)                | Show interactive React Native content in a native popover      |
+| [TipKit](#tipkit)                  | Present contextual tips using Apple's TipKit framework         |
+| [LiquidGlassText](#liquidglasstext) | Render text with native glass effects inside the glyphs        |
+| [Stepper](#stepper)                | Adjust numeric values with the native iOS stepper              |
+| [ConcentricView](#concentricview)  | Follow the containing view's corners with concentric rounding   |
+| [SFSymbol](#sfsymbol)              | Display SF Symbols with native rendering and animation effects |
 
 Screenshots below show the example app on an iPhone 17 Pro simulator running
 iOS 26.5.
@@ -599,6 +603,46 @@ multicolor and variable/draw support depend on each symbol's native annotations.
 `respectReduceMotion` defaults to `true`: repeating/discrete effects and content
 transitions are suppressed while Reduce Motion is enabled, while scale and
 visibility state changes apply instantly. Set it to `false` to opt out.
+
+## Example App
+
+The [example app](example/src/App.tsx) demonstrates Menu, Popover, TipKit,
+LiquidGlassText, Stepper, ConcentricView, and SFSymbol. It includes all native
+components, so building it requires Xcode 26+. Use iOS 26+ to try the glass effects
+and the latest SF Symbol features.
+
+From the repository root, install the dependencies:
+
+```sh
+yarn
+```
+
+Install the example's Pods:
+
+```sh
+cd example/ios && pod install
+```
+
+Then run Metro and the iOS app from the repository root in separate terminals:
+
+```sh
+yarn example start
+```
+
+```sh
+yarn example ios
+```
+
+The example uses Metro port `8082`, which is already configured in these scripts.
+See the [development workflow](CONTRIBUTING.md#development-workflow) for more
+details.
+
+## Apps Using This Library
+
+- [Night Vision - LiDAR Camera](https://apps.apple.com/app/id1668629667)
+- [Laser Measure - LiDAR Powered](https://apps.apple.com/app/id6466744678)
+- [PhoneAway - Digital Detox](https://apps.apple.com/app/id6744548607)
+- [Fatigue Alert - Stay Awake](https://apps.apple.com/app/id6479893638)
 
 ## Contributing
 
