@@ -14,6 +14,9 @@ staying close to native APIs. It uses UIKit by default and SwiftUI where needed.
 - [ConcentricView](#concentricview)
 - [SFSymbol](#sfsymbol)
 
+Screenshots below show the example app on an iPhone 17 Pro simulator running
+iOS 26.5.
+
 ## Philosophy and comparison with `@expo/ui`
 
 TinyUI prioritizes performance, stability, a small app footprint, and familiar
@@ -98,6 +101,8 @@ compatibility. JavaScript entry points provide cleaner dependency boundaries;
 
 ## Menu
 
+<img src="docs/screenshots/menu.png" alt="Menu with native document actions expanded" width="320" />
+
 `Menu` uses `children` as its trigger and receives its native menu entries
 through the `options` prop. A tap opens the native menu; `onActionPress`
 receives every selected action's stable id and displayed title.
@@ -168,6 +173,8 @@ plus `destructive`, `disabled`, `hidden`, and `displayInline`.
 
 ## Popover
 
+<img src="docs/screenshots/popover.png" alt="Popover displaying resizable content above its trigger" width="320" />
+
 `Popover` supports standard controlled and uncontrolled React state. Its content
 remains a normal interactive React Native view tree hosted by a real
 `UIPopoverPresentationController`.
@@ -212,6 +219,8 @@ appearance on earlier iOS versions. `style` on `Popover` styles the trigger's
 outer container, not the presented content.
 
 ## TipKit
+
+<img src="docs/screenshots/tip-kit.png" alt="TipKit popover with a save action anchored to the favorite button" width="320" />
 
 `TipKit.Popover` anchors a native TipKit `TipUIPopoverViewController` to ordinary
 React Native children on iOS 17+. The children retain their own touch handlers;
@@ -312,6 +321,8 @@ ID for trying the behavior again without clearing the app's TipKit datastore.
 
 ## LiquidGlassText
 
+<img src="docs/screenshots/liquid-glass-text.png" alt="LiquidGlassText rendering English, Chinese, and numbers over a photo" width="320" />
+
 `LiquidGlassText` renders native glass inside the glyph outlines, based on
 [GlassText](https://github.com/ailtonvivaz/GlassText). It exposes the effect and
 typography through React props.
@@ -378,6 +389,8 @@ The adapted Core Text outline implementation retains the upstream MIT notice in
 
 ## Stepper
 
+<img src="docs/screenshots/stepper.png" alt="Native Stepper with a controlled value and configurable range" width="320" />
+
 `Stepper` bridges UIKit's
 [`UIStepper`](https://developer.apple.com/documentation/uikit/uistepper) through
 Fabric. It supports fractional steps, press-and-hold repeat, and wrapping at
@@ -436,6 +449,8 @@ stepper shows the minus and plus buttons; render a separate `Text` for the value
 
 ## ConcentricView
 
+<img src="docs/screenshots/concentric-view.png" alt="Nested ConcentricView containers following the bottom screen corners" width="320" />
+
 `ConcentricView` is a Fabric container that lets UIKit resolve its corner radii
 relative to its containing view. On iOS 26+, it applies
 [`UICornerRadius.containerConcentricRadius`](https://developer.apple.com/documentation/uikit/uicornerradius-c.class/containerconcentricradius)
@@ -470,6 +485,8 @@ React Native's custom border, outline, and shadow drawing does not calculate
 concentric radii; keep those decorations on a surrounding view when needed.
 
 ## SFSymbol
+
+<img src="docs/screenshots/sf-symbol.png" alt="SFSymbol rendering a bell badge with native symbol colors" width="320" />
 
 `SFSymbol` uses **UIKit `UIImageView` + Apple's Symbols framework**, exposed
 through Fabric. It does not embed a SwiftUI hosting view. Xcode 26+ is required
