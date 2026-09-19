@@ -1,6 +1,6 @@
 {
   "name": "react-native-tinyui",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "Dependency-free native iOS Menu, Popover, TipKit, Stepper, ConcentricView, SFSymbol and LiquidGlassText components for React Native",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
