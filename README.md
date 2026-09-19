@@ -1,16 +1,40 @@
 # react-native-tinyui
 
-Dependency-free, native iOS `Menu`, `Popover`, `TipKit`, `Stepper`, `ConcentricView`, `SFSymbol` and `LiquidGlassText` components for React Native's
-New Architecture. The public API follows normal React composition patterns;
-the native UI is exposed through Fabric components. `Menu`, `Popover`, `Stepper`, `ConcentricView` and `SFSymbol` are
-implemented directly with UIKit; `LiquidGlassText` uses SwiftUI where needed.
+A dependency-free collection of native iOS components for React Native's New
+Architecture. Built on Fabric, TinyUI offers familiar React composition while
+staying close to native APIs. It uses UIKit by default and SwiftUI where needed.
 
-The initial component behavior is inspired by
-[`@expo/ui`](https://github.com/expo/expo/tree/main/packages/expo-ui), but this
-package does not require Expo Modules or any other runtime package. The
-React Native ↔ native view integration follows the approach used by
-[`react-native-pager-view`](https://github.com/callstack/react-native-pager-view):
-a Fabric component owns the platform view that renders its content.
+## Components
+
+- [Menu](#menu)
+- [Popover](#popover)
+- [TipKit](#tipkit)
+- [LiquidGlassText](#liquidglasstext)
+- [Stepper](#stepper)
+- [ConcentricView](#concentricview)
+- [SFSymbol](#sfsymbol)
+
+## Philosophy and comparison with `@expo/ui`
+
+TinyUI prioritizes performance, stability, a small app footprint, and familiar
+React composition. These priorities guide which components we add and how we
+bridge them.
+
+| Design choice | `react-native-tinyui` | `@expo/ui` |
+| --- | --- | --- |
+| Runtime dependencies | Zero additional runtime dependencies beyond `react` and `react-native`. No `expo`, Expo Modules, or `react-native-nitro-modules` required. | Uses Expo Modules; existing React Native apps must [install `expo`](https://docs.expo.dev/versions/latest/sdk/ui/swift-ui/#installation). |
+| Native implementation | Performance and stability first. Prefers direct UIKit integration through Fabric; uses SwiftUI when a component needs it. | Uses [SwiftUI on iOS](https://docs.expo.dev/versions/latest/sdk/ui/swift-ui/), with its layout and hosting model. |
+| Selective inclusion and app size | Component-specific JS imports avoid loading unrelated component modules. An explicit native component list excludes unselected UI implementations and their framework requirements from the pod. | Provides platform-specific JS entry points. Its [iOS podspec](https://github.com/expo/expo/blob/main/packages/expo-ui/ios/ExpoUI.podspec) includes native sources together, without a per-component selection list. JS imports alone do not select native sources. |
+| Component scope | Welcomes both system UI and third-party UI, such as [GlassText](#liquidglasstext). Adding components to the catalog does not require apps to include their UI implementations when they remain unselected. | Centers on SwiftUI and Jetpack Compose. Supports [custom SwiftUI components and modifiers, including third-party SwiftUI libraries](https://docs.expo.dev/guides/expo-ui-swift-ui/extending/). |
+| React API | Familiar props, children, and controlled/uncontrolled state, composed with ordinary React Native views. Names and behavior stay close to the underlying native APIs. | Exposes native toolkit concepts through React, including SwiftUI views, modifiers, and a [`Host` container](https://docs.expo.dev/versions/latest/sdk/ui/swift-ui/#usage). |
+| Supported targets and maintenance | iOS 17+ and the New Architecture only. Excluding older iOS versions and the legacy bridge reduces compatibility code and keeps maintenance focused. | Covers a broader platform scope: SwiftUI on iOS, Jetpack Compose on Android, and [universal components for iOS, Android, and web](https://docs.expo.dev/versions/latest/sdk/ui/universal/). Requirements depend on the Expo SDK and component. |
+
+For the smallest builds, combine component-specific JS imports with
+[`react-native-tinyui.components`](#optional-component-selection). All native
+components are enabled by default, so configure that list explicitly. Shared
+core code, Fabric Codegen, and lightweight registration stubs remain in the
+native build; the size savings come from excluding unused UI implementations.
+Final bundle size also depends on the app's bundler and linker settings.
 
 ## Requirements
 
