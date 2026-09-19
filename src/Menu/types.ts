@@ -1,10 +1,9 @@
 import type {
-  ComponentRef,
   ForwardRefExoticComponent,
   ReactNode,
   RefAttributes,
 } from 'react';
-import type { ColorValue, View, ViewProps } from 'react-native';
+import type { ColorValue, HostInstance, ViewProps } from 'react-native';
 
 export type MenuItemState = 'off' | 'on' | 'mixed';
 
@@ -75,6 +74,14 @@ export type MenuActionPressEvent = Readonly<{
   nativeEvent: Readonly<MenuActionPressEventData>;
 }>;
 
+export type MenuRef = HostInstance & {
+  /**
+   * Opens the menu at its mounted trigger on iOS 17.4 and newer.
+   * Does nothing on older iOS versions or while disabled or detached.
+   */
+  open(): void;
+};
+
 export interface MenuProps extends Omit<ViewProps, 'children'> {
   /** The trigger element. */
   children: ReactNode;
@@ -89,5 +96,5 @@ export interface MenuProps extends Omit<ViewProps, 'children'> {
 }
 
 export interface MenuComponent extends ForwardRefExoticComponent<
-  MenuProps & RefAttributes<ComponentRef<typeof View>>
+  MenuProps & RefAttributes<MenuRef>
 > {}

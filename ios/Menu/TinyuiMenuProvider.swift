@@ -1,4 +1,5 @@
 import UIKit
+import UIKit.UIGestureRecognizerSubclass
 
 /**
  * UIButton-backed UIKit menu trigger used as the Fabric component's content
@@ -6,6 +7,7 @@ import UIKit
  */
 @objc public final class TinyuiMenuProvider: UIButton {
   private weak var delegate: TinyuiMenuViewDelegate?
+  private weak var menuTouchGate: TinyuiMenuTouchGate?
 
   @objc public var triggerView: UIView? {
     didSet {
@@ -35,6 +37,32 @@ import UIKit
     configure()
   }
 
+  override public func didMoveToWindow() {
+    super.didMoveToWindow()
+    menuTouchGate?.presentedMenus.remove(self)
+    menuTouchGate = window.map { TinyuiMenuTouchGate.install(in: $0) }
+  }
+
+  override public func contextMenuInteraction(
+    _ interaction: UIContextMenuInteraction,
+    willDisplayMenuFor configuration: UIContextMenuConfiguration,
+    animator: UIContextMenuInteractionAnimating?
+  ) {
+    super.contextMenuInteraction(interaction, willDisplayMenuFor: configuration, animator: animator)
+    menuTouchGate?.presentedMenus.add(self)
+  }
+
+  override public func contextMenuInteraction(
+    _ interaction: UIContextMenuInteraction,
+    willEndFor configuration: UIContextMenuConfiguration,
+    animator: UIContextMenuInteractionAnimating?
+  ) {
+    super.contextMenuInteraction(interaction, willEndFor: configuration, animator: animator)
+    // The dismissal touch has already been filtered. New touches during the
+    // closing animation belong to the page again.
+    menuTouchGate?.presentedMenus.remove(self)
+  }
+
   override public func layoutSubviews() {
     super.layoutSubviews()
     triggerView?.frame = bounds
@@ -54,6 +82,16 @@ import UIKit
   private func configure() {
     backgroundColor = .clear
     showsMenuAsPrimaryAction = true
+  }
+
+  @objc public func openMenu() {
+    guard isEnabled, isUserInteractionEnabled, !isHidden, alpha > 0.01,
+          window != nil, !bounds.isEmpty, menu != nil else {
+      return
+    }
+    if #available(iOS 17.4, *) {
+      performPrimaryAction()
+    }
   }
 
   /** Applies one complete Fabric props snapshot before rebuilding the menu. */
@@ -78,5 +116,67 @@ import UIKit
       title: title,
       config: menuConfig
     )
+  }
+}
+
+/**
+ * Uses the early-event filtering approach from Expo's SystemMenuTouchGate:
+ * https://github.com/expo/expo/pull/49775
+ * TinyUI tracks its own menus through public UIButton lifecycle callbacks.
+ */
+final class TinyuiMenuTouchGate: UIGestureRecognizer, UIGestureRecognizerDelegate {
+  let presentedMenus = NSHashTable<TinyuiMenuProvider>.weakObjects()
+  private static let surfaceTouchHandlerClass = NSClassFromString("RCTSurfaceTouchHandler")
+
+  init() {
+    super.init(target: nil, action: nil)
+    cancelsTouchesInView = false
+    delaysTouchesBegan = false
+    delaysTouchesEnded = false
+    delegate = self
+  }
+
+  static func install(in window: UIWindow) -> TinyuiMenuTouchGate {
+    if let gate = window.gestureRecognizers?.first(where: { $0 is TinyuiMenuTouchGate })
+      as? TinyuiMenuTouchGate {
+      return gate
+    }
+    let gate = TinyuiMenuTouchGate()
+    window.addGestureRecognizer(gate)
+    return gate
+  }
+
+  private func ignoreReactTouches(_ touches: Set<UITouch>, event: UIEvent) {
+    guard let window = view as? UIWindow,
+          presentedMenus.allObjects.contains(where: { $0.window === window }),
+          let handlerClass = Self.surfaceTouchHandlerClass else {
+      return
+    }
+
+    for touch in touches where touch.phase == .began {
+      var ancestor = touch.view
+      while let current = ancestor {
+        for handler in current.gestureRecognizers ?? [] where handler.isKind(of: handlerClass) {
+          handler.ignore(touch, for: event)
+        }
+        ancestor = current.superview
+      }
+    }
+  }
+
+  func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive event: UIEvent) -> Bool {
+    // Filtering in touchesBegan alone is too late: RN may already have sent
+    // touchStart/onPressIn to JS. UIKit asks this delegate before delivery.
+    if let touches = event.allTouches {
+      ignoreReactTouches(touches, event: event)
+    }
+    return true
+  }
+
+  override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+    super.touchesBegan(touches, with: event)
+    // Fallback for delivery orders where RN sees the touch first.
+    ignoreReactTouches(touches, event: event)
+    state = .failed
   }
 }

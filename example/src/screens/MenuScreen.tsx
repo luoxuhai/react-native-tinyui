@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
+  Button,
   DynamicColorIOS,
   PlatformColor,
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -11,6 +13,7 @@ import {
   type MenuActionPressEvent,
   type MenuItemState,
   type MenuOption,
+  type MenuRef,
 } from 'react-native-tinyui';
 
 import {
@@ -92,6 +95,7 @@ const nestedOptions: readonly MenuOption[] = [
 ];
 
 export function MenuScreen() {
+  const menuRef = useRef<MenuRef>(null);
   const [compositionIndex, setCompositionIndex] = useState(0);
   const [disabled, setDisabled] = useState(false);
   const [keepOpen, setKeepOpen] = useState(true);
@@ -99,6 +103,15 @@ export function MenuScreen() {
   const [mixedState, setMixedState] = useState<MenuItemState>('mixed');
   const [lastEvent, setLastEvent] = useState('No action selected yet.');
   const [selectionCount, setSelectionCount] = useState(0);
+  const [touchCounts, setTouchCounts] = useState({
+    start: 0,
+    in: 0,
+    out: 0,
+    press: 0,
+  });
+  const countTouch = (kind: keyof typeof touchCounts) => {
+    setTouchCounts((counts) => ({ ...counts, [kind]: counts[kind] + 1 }));
+  };
   const composition = compositions[compositionIndex] ?? compositions[0];
 
   const stateOptions: readonly MenuOption[] = [
@@ -167,6 +180,7 @@ export function MenuScreen() {
           </Text>
         </View>
         <Menu
+          ref={menuRef}
           accessibilityLabel={`Open ${composition.title.toLowerCase()}`}
           disabled={disabled}
           onActionPress={handleAction}
@@ -190,7 +204,34 @@ export function MenuScreen() {
             </Text>
           </View>
         </Menu>
+        <Button
+          title="Open from another button (iOS 17.4+)"
+          testID="menu-open-imperatively"
+          disabled={disabled}
+          onPress={() => menuRef.current?.open()}
+        />
       </View>
+
+      <Pressable
+        testID="menu-background-button"
+        accessibilityRole="button"
+        onTouchStart={() => countTouch('start')}
+        onPressIn={() => countTouch('in')}
+        onPressOut={() => countTouch('out')}
+        onPress={() => countTouch('press')}
+        style={playgroundStyles.trigger}
+      >
+        <Text style={playgroundStyles.triggerLabel}>
+          Test background button
+        </Text>
+      </Pressable>
+      <Text testID="menu-background-events" style={playgroundStyles.caption}>
+        {`Touch: ${touchCounts.start} · In: ${touchCounts.in} · Out: ${touchCounts.out} · Press: ${touchCounts.press}`}
+      </Text>
+      <Text style={playgroundStyles.caption}>
+        Open the menu, then tap this button. The menu should close without
+        changing any counter. Tap again to count a normal press.
+      </Text>
 
       <ControlPanel>
         <Setting

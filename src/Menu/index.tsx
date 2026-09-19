@@ -1,12 +1,17 @@
-import { forwardRef, type ComponentRef } from 'react';
-import { View } from 'react-native';
+import {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  type ComponentRef,
+} from 'react';
+import { View, type HostInstance } from 'react-native';
 
 import { assertComponentEnabled } from '../utils';
-import type { MenuComponent, MenuProps } from './types';
-import NativeMenuView from './MenuNativeComponent';
+import type { MenuComponent, MenuProps, MenuRef } from './types';
+import NativeMenuView, { Commands } from './MenuNativeComponent';
 import { serializeMenuOptions } from './options';
 
-const MenuRoot = forwardRef<ComponentRef<typeof View>, MenuProps>(function Menu(
+const MenuRoot = forwardRef<MenuRef, MenuProps>(function Menu(
   {
     accessibilityLabel,
     children,
@@ -21,11 +26,28 @@ const MenuRoot = forwardRef<ComponentRef<typeof View>, MenuProps>(function Menu(
 ) {
   assertComponentEnabled('Menu');
 
+  const viewRef = useRef<HostInstance>(null);
+  const nativeRef = useRef<ComponentRef<typeof NativeMenuView>>(null);
+
+  useImperativeHandle(
+    ref,
+    () =>
+      Object.assign(viewRef.current!, {
+        open() {
+          if (!disabled && nativeRef.current) {
+            Commands.open(nativeRef.current);
+          }
+        },
+      }),
+    [disabled]
+  );
+
   const menuConfig = serializeMenuOptions(options);
 
   return (
-    <View {...viewProps} ref={ref} collapsable={false}>
+    <View {...viewProps} ref={viewRef} collapsable={false}>
       <NativeMenuView
+        ref={nativeRef}
         accessibilityLabel={accessibilityLabel}
         disabled={disabled}
         menuConfig={menuConfig}
@@ -49,6 +71,7 @@ export type {
   MenuItemState,
   MenuOption,
   MenuProps,
+  MenuRef,
   MenuSectionOption,
   MenuSubmenuOption,
 } from './types';

@@ -17,6 +17,7 @@ export type {
   MenuItemState,
   MenuOption,
   MenuProps,
+  MenuRef,
   MenuSectionOption,
   MenuSubmenuOption,
 } from './Menu';

@@ -64,6 +64,18 @@ using namespace facebook::react;
   }
 }
 
+#pragma mark - Commands
+
+- (void)handleCommand:(const NSString *)commandName args:(const NSArray *)args
+{
+  RCTTinyuiMenuViewHandleCommand(self, commandName, args);
+}
+
+- (void)open
+{
+  [_menuProvider openMenu];
+}
+
 #pragma mark - Props
 
 - (void)updateProps:(Props::Shared const &)props

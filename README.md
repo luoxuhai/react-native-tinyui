@@ -165,6 +165,32 @@ or `type: 'divider'` for structural entries; nested entries use their own
 `options` array. SF Symbols are passed with `systemImage`; missing symbols
 simply render no image.
 
+To open the menu from another control, call `open()` on its ref:
+
+```tsx
+import { useRef } from 'react';
+import { Button, Text } from 'react-native';
+import { Menu, type MenuRef } from 'react-native-tinyui/menu';
+
+function DocumentMenu() {
+  const menuRef = useRef<MenuRef>(null);
+
+  return (
+    <>
+      <Menu ref={menuRef} options={[{ id: 'rename', title: 'Rename' }]}>
+        <Text>Document actions</Text>
+      </Menu>
+      <Button title="Open menu" onPress={() => menuRef.current?.open()} />
+    </>
+  );
+}
+```
+
+`open()` requires iOS 17.4 or newer and anchors the menu to its mounted trigger.
+It does nothing on older iOS versions, while `disabled`, or when the trigger is
+detached. Tapping the trigger still works on all supported iOS versions. The ref
+also retains the outer View's methods, such as `measure` and `measureInWindow`.
+
 Action options support `subtitle`, `state`, `destructive`, `disabled`, `hidden`,
 and `keepOpen`. Set explicit `id` values when handling `onActionPress`; actions
 without one receive a generated menu-path id. Use `icon` to load an image from
