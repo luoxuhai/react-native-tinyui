@@ -9,7 +9,8 @@
       "LiquidGlassText",
       "Stepper",
       "ConcentricView",
-      "SFSymbol"
+      "SFSymbol",
+      "TipKit"
     ]
   },
   "scripts": {

@@ -1,7 +1,7 @@
 {
   "name": "react-native-tinyui",
   "version": "0.5.0",
-  "description": "Dependency-free native iOS Menu, Popover, Stepper, ConcentricView, SFSymbol and LiquidGlassText components for React Native",
+  "description": "Dependency-free native iOS Menu, Popover, TipKit, Stepper, ConcentricView, SFSymbol and LiquidGlassText components for React Native",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
@@ -34,6 +34,11 @@
       "react-native-tinyui-source": "./src/SFSymbol/index.tsx",
       "types": "./lib/typescript/src/SFSymbol/index.d.ts",
       "default": "./lib/module/SFSymbol/index.js"
+    },
+    "./tip-kit": {
+      "react-native-tinyui-source": "./src/TipKit/index.ts",
+      "types": "./lib/typescript/src/TipKit/index.d.ts",
+      "default": "./lib/module/TipKit/index.js"
     },
     "./package.json": "./package.json",
     "./liquid-glass-text": {
@@ -164,6 +169,9 @@
         },
         "TinyuiSFSymbolView": {
           "className": "TinyuiSFSymbolView"
+        },
+        "TinyuiTipPopoverView": {
+          "className": "TinyuiTipPopoverView"
         }
       }
     }

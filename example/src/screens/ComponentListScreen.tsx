@@ -14,6 +14,13 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Components'>;
 
 const components = [
   {
+    description:
+      'Contextual tips with native eligibility and persistent history.',
+    glyph: '✦',
+    route: 'TipKit',
+    title: 'TipKit',
+  },
+  {
     description: 'SF Symbols, native animations, rendering and transitions.',
     glyph: '􀆿',
     route: 'SFSymbol',

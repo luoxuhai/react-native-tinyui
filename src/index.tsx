@@ -1,4 +1,14 @@
 export { Menu } from './Menu';
+export { TipKit } from './TipKit';
+export type {
+  TipAction,
+  TipDisplayFrequency,
+  TipError,
+  TipInvalidationReason,
+  TipPopoverProps,
+  TipKitConfiguration,
+  TipStatus,
+} from './TipKit';
 export type {
   MenuActionOption,
   MenuActionPressEvent,

@@ -53,6 +53,12 @@ TINYUI_DISABLED_COMPONENT(TinyuiConcentricView, TinyuiConcentricViewComponentDes
 TINYUI_DISABLED_COMPONENT(TinyuiSFSymbolView, TinyuiSFSymbolViewComponentDescriptor)
 #endif
 
+#if TINYUI_FEATURE_TIP_KIT
+#import "TinyuiTipPopoverView.h"
+#else
+TINYUI_DISABLED_COMPONENT(TinyuiTipPopoverView, TinyuiTipPopoverViewComponentDescriptor)
+#endif
+
 #undef TINYUI_DISABLED_COMPONENT
 
 Class<RCTComponentViewProtocol> TinyuiMenuViewCls(void)
@@ -83,4 +89,9 @@ Class<RCTComponentViewProtocol> TinyuiConcentricViewCls(void)
 Class<RCTComponentViewProtocol> TinyuiSFSymbolViewCls(void)
 {
   return TinyuiSFSymbolView.class;
+}
+
+Class<RCTComponentViewProtocol> TinyuiTipPopoverViewCls(void)
+{
+  return TinyuiTipPopoverView.class;
 }

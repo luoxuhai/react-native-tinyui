@@ -1,6 +1,6 @@
 # react-native-tinyui
 
-Dependency-free, native iOS `Menu`, `Popover`, `Stepper`, `ConcentricView`, `SFSymbol` and `LiquidGlassText` components for React Native's
+Dependency-free, native iOS `Menu`, `Popover`, `TipKit`, `Stepper`, `ConcentricView`, `SFSymbol` and `LiquidGlassText` components for React Native's
 New Architecture. The public API follows normal React composition patterns;
 the native UI is exposed through Fabric components. `Menu`, `Popover`, `Stepper`, `ConcentricView` and `SFSymbol` are
 implemented directly with UIKit; `LiquidGlassText` uses SwiftUI where needed.
@@ -49,6 +49,7 @@ Available components:
 - `Stepper`
 - `ConcentricView`
 - `SFSymbol`
+- `TipKit` (enables `TipKit.Popover`, `TipKit.configure` and `TipKit.invalidate`)
 
 All components are enabled by default. Use an empty `components` array to
 compile only the TurboModule core. Run `pod install` again whenever this list
@@ -64,6 +65,7 @@ import { LiquidGlassText } from 'react-native-tinyui/liquid-glass-text';
 import { Stepper } from 'react-native-tinyui/stepper';
 import { ConcentricView } from 'react-native-tinyui/concentric-view';
 import { SFSymbol } from 'react-native-tinyui/sf-symbol';
+import { TipKit } from 'react-native-tinyui/tip-kit';
 ```
 
 The root `react-native-tinyui` imports remain supported for backwards
@@ -184,6 +186,105 @@ Keep the content background transparent to show the native popover material:
 Liquid Glass on iOS 26+ when built with Xcode 26+, and the system popover
 appearance on earlier iOS versions. `style` on `Popover` styles the trigger's
 outer container, not the presented content.
+
+## TipKit
+
+`TipKit.Popover` anchors a native TipKit `TipUIPopoverViewController` to ordinary
+React Native children on iOS 17+. The children retain their own touch handlers;
+the tip appears automatically when both `enabled` and TipKit's eligibility allow
+it. Its text, SF Symbol, action buttons, display history and invalidation use
+Apple's TipKit framework. No additional package is required.
+
+Configure TipKit once, **before mounting tips** (for example, during app startup):
+
+```tsx
+import { TipKit, SFSymbol } from 'react-native-tinyui';
+import { Pressable } from 'react-native';
+
+await TipKit.configure({ displayFrequency: 'daily' });
+
+// Inside your screen:
+<TipKit.Popover
+  tipId="favorite-feature-v1"
+  title="Keep your favorites close"
+  message="Save an item to find it quickly next time."
+  systemImage="star"
+  enabled={isScreenFocused && !hasFavorites}
+  maxDisplayCount={3}
+  actions={[{ id: 'learn-more', title: 'Learn more' }]}
+  onActionPress={({ id }) => {
+    if (id === 'learn-more') openHelp();
+  }}
+  onStatusChange={(status) => console.log(status)}
+  onVisibleChange={(visible) => console.log({ visible })}
+  onError={(error) => console.warn(error.message)}
+>
+  <Pressable onPress={async () => {
+    await saveFavorite();
+    await TipKit.invalidate('favorite-feature-v1', 'actionPerformed');
+  }}>
+    <SFSymbol name="star" size={24} />
+  </Pressable>
+</TipKit.Popover>;
+```
+
+| Prop | Description | Default |
+| --- | --- | --- |
+| `tipId` | Required stable identity for persistent history | — |
+| `title` | Required nonempty title, already localized by the app | — |
+| `message` | Supporting plain text | — |
+| `systemImage` | SF Symbol name | — |
+| `actions` | Buttons with unique nonempty `{ id, title }` values | `[]` |
+| `enabled` | Allows presentation; does not override TipKit eligibility | `true` |
+| `maxDisplayCount` | Positive integer; automatically invalidates after this many displays | Unlimited |
+| `ignoresDisplayFrequency` | Exempts this tip from the app-wide display interval | `false` |
+| `arrowEdge` | Preferred bubble edge: `top`, `bottom`, `leading`, `trailing`, `auto` | `auto` |
+| `onStatusChange` | `{ status: 'pending' \| 'available' }` or `{ status: 'invalidated', reason }` | — |
+| `onVisibleChange` | Whether the native bubble is actually visible | — |
+| `onActionPress` | Receives the selected `{ id, title }`; does not automatically invalidate | — |
+| `onError` | Receives `{ code, message }`; otherwise a warning is logged | — |
+
+The component accepts standard `ViewProps` and a native view ref. `style` lays
+out the anchor, not the bubble. UIKit chooses the bubble's size and may adapt
+the arrow to available space; leading/trailing follow layout direction. Bubble
+content is native text/images/actions; `children` supplies only the anchor.
+Content edits apply to the next presentation; the currently visible bubble
+retains the content and action labels it was presented with.
+
+### Configuration and lifetime
+
+`TipKit.configure({ displayFrequency })` returns a promise. Supported frequencies
+are `immediate`, `hourly`, `daily` (default), `weekly` and `monthly`. This is an
+app-wide TipKit setting. Repeating the same configuration is safe, including
+after Fast Refresh; changing it later rejects with `E_TIPS_ALREADY_CONFIGURED`.
+Coordinate this startup configuration with any other native TipKit integration.
+Initialization errors reject the promise; an enabled view mounted too early
+reports `E_TIPS_NOT_CONFIGURED` and can recover after configuration succeeds.
+
+`TipKit.invalidate(tipId, reason = 'actionPerformed')` also returns a promise and
+requires configuration first. It persistently invalidates the ID even when no
+view for that tip is mounted. `reason` may be `actionPerformed` or `tipClosed`.
+System invalidations can additionally report `displayCountExceeded`,
+`displayDurationExceeded`, or `unknown` through `onStatusChange`.
+
+Keep IDs stable across renders, app launches and translations. All instances
+with the same ID share their TipKit history. Keep `maxDisplayCount` and
+`ignoresDisplayFrequency` consistent for each ID; conflicting values report
+`E_CONFLICTING_TIP_OPTIONS`. Use a deliberate new versioned ID for a new feature
+tip. Hiding a tip, unmounting it or reconfiguring TinyUI never resets history.
+
+Use `enabled={isScreenFocused && businessCondition}` with your navigation
+library. TinyUI also waits for a visible anchor and a free presenter, and
+dismisses on detachment or when the anchor leaves the visible area. It presents
+at most one TinyUI tip at a time and waits while another modal occupies the
+presenter. An outside dismissal suppresses immediate reopening for that mount;
+toggle `enabled` off and on to allow another attempt, subject to TipKit's state.
+The system close button can permanently invalidate a tip.
+
+This first version exposes popover tips and JS eligibility conditions. Inline
+`TipUIView`, native rule/event builders, TipGroup and datastore reset APIs are
+not exposed. The example's **New demo tip** button deliberately creates another
+ID for trying the behavior again without clearing the app's TipKit datastore.
 
 ## LiquidGlassText
 

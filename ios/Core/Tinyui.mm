@@ -1,4 +1,7 @@
 #import "Tinyui.h"
+#if TINYUI_FEATURE_TIP_KIT
+#import "Tinyui-Swift.h"
+#endif
 
 @implementation Tinyui
 
@@ -25,8 +28,50 @@
 #if TINYUI_FEATURE_SF_SYMBOL
   [components addObject:@"SFSymbol"];
 #endif
+#if TINYUI_FEATURE_TIP_KIT
+  [components addObject:@"TipKit"];
+#endif
 
   return components;
+}
+
+- (void)configureTips:(NSString *)displayFrequency
+             resolve:(RCTPromiseResolveBlock)resolve
+              reject:(RCTPromiseRejectBlock)reject
+{
+#if TINYUI_FEATURE_TIP_KIT
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [TinyuiTipsRuntime configure:displayFrequency completion:^(NSError *error) {
+      if (error != nil) {
+        reject(error.userInfo[@"code"] ?: @"E_TIPS_CONFIGURATION", error.localizedDescription, error);
+      } else {
+        resolve(nil);
+      }
+    }];
+  });
+#else
+  reject(@"E_TIP_NOT_INSTALLED", @"Enable TipKit in react-native-tinyui.components and run pod install.", nil);
+#endif
+}
+
+- (void)invalidateTip:(NSString *)tipId
+              reason:(NSString *)reason
+             resolve:(RCTPromiseResolveBlock)resolve
+              reject:(RCTPromiseRejectBlock)reject
+{
+#if TINYUI_FEATURE_TIP_KIT
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [TinyuiTipsRuntime invalidate:tipId reason:reason completion:^(NSError *error) {
+      if (error != nil) {
+        reject(error.userInfo[@"code"] ?: @"E_TIP_INVALIDATION", error.localizedDescription, error);
+      } else {
+        resolve(nil);
+      }
+    }];
+  });
+#else
+  reject(@"E_TIP_NOT_INSTALLED", @"Enable TipKit in react-native-tinyui.components and run pod install.", nil);
+#endif
 }
 
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:

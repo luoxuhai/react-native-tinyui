@@ -10,6 +10,7 @@ import { MenuScreen } from './screens/MenuScreen';
 import { PopoverScreen } from './screens/PopoverScreen';
 import { StepperScreen } from './screens/StepperScreen';
 import { SFSymbolScreen } from './screens/SFSymbolScreen';
+import { TipKitScreen } from './screens/TipKitScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -30,6 +31,11 @@ export default function App() {
           />
           <Stack.Screen component={MenuScreen} name="Menu" />
           <Stack.Screen component={PopoverScreen} name="Popover" />
+          <Stack.Screen
+            component={TipKitScreen}
+            name="TipKit"
+            options={{ title: 'TipKit' }}
+          />
           <Stack.Screen component={StepperScreen} name="Stepper" />
           <Stack.Screen
             component={SFSymbolScreen}

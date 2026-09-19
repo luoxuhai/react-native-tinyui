@@ -6,7 +6,8 @@ export type TinyuiComponent =
   | 'LiquidGlassText'
   | 'Stepper'
   | 'ConcentricView'
-  | 'SFSymbol';
+  | 'SFSymbol'
+  | 'TipKit';
 
 let nativeTinyui: Spec | null | undefined;
 let enabledComponents: ReadonlySet<string> | undefined;
