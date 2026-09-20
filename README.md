@@ -389,7 +389,7 @@ import { LiquidGlassText } from 'react-native-tinyui';
 | Prop                     | Values                                           | Default   |
 | ------------------------ | ------------------------------------------------ | --------- |
 | `text`                   | String (including text translated in JavaScript) | Required  |
-| `effect`                 | `clear`, `regular`, `identity`                   | `clear`   |
+| `effect`                 | `clear`, `regular`                               | `clear`   |
 | `tint`                   | React Native `ColorValue`                        | —         |
 | `interactive`            | Whether the glass responds to interaction        | `false`   |
 | `fontDesign`             | `default`, `serif`, `monospaced`, `rounded`      | `default` |
@@ -403,7 +403,7 @@ precedence. `fontFamily` accepts the PostScript name of a font installed in the
 app, and `fontDesign` only applies to system fonts.
 
 `tint` accepts a React Native `ColorValue`, including `PlatformColor` and
-`DynamicColorIOS`. `identity` applies no glass effect.
+`DynamicColorIOS`.
 The component also accepts standard `ViewProps`, including `style`, `testID`,
 accessibility props and a native view ref. The supplied text is used for
 the default accessibility label; pass `accessibilityLabel` to override it.
@@ -564,9 +564,7 @@ function Favorite() {
 | `size` | Positive point size; default `17`. |
 | `weight` | `unspecified` (default), `ultraLight`, `thin`, `light`, `regular`, `medium`, `semibold`, `bold`, `heavy`, `black`. |
 | `scale` | `default`, `unspecified`, `small`, `medium`, `large`. |
-| `textStyle` | `extraLargeTitle`, `extraLargeTitle2`, `largeTitle`, `title1`–`title3`, `headline`, `subheadline`, `body`, `callout`, `footnote`, `caption1`, `caption2`. Overrides `size` and supplies the style's weight unless explicitly set. |
-| `fontFamily` | Font/PostScript name used to derive symbol metrics; unknown fonts use system metrics. |
-| `allowFontScaling` | Default `true`. Scales the base point size by React Native's `fontScale`, including when using `textStyle`. |
+| `allowFontScaling` | Default `true`. Scales the base point size by React Native's `fontScale`. |
 | `maxFontSizeMultiplier` | Cap on that scale, >= 1. Omitted or `0` means unlimited. |
 | `renderingMode` | `automatic` (default), `monochrome`, `hierarchical`, `palette`, `multicolor`. |
 | `color` | React Native `ColorValue`, including `PlatformColor` and `DynamicColorIOS`. Defaults to semantic label color. |

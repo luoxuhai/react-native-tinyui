@@ -32,11 +32,6 @@ const effects = [
     value: 'regular',
     hint: 'A fuller glass material with more separation from the backdrop.',
   },
-  {
-    label: 'Identity',
-    value: 'identity',
-    hint: 'Removes the glass effect. The letter shapes may become invisible.',
-  },
 ] as const;
 const fonts = [
   { label: 'Default', value: 'default' },
@@ -123,11 +118,9 @@ export function LiquidGlassTextScreen() {
           )}
         </ScrollView>
         <Text style={styles.stageHint}>
-          {effect.value === 'identity'
-            ? 'Identity · no glass material'
-            : interactive
-              ? 'Touch the letters to explore the glass.'
-              : 'A still moment. Touch response is off.'}
+          {interactive
+            ? 'Touch the letters to explore the glass.'
+            : 'A still moment. Touch response is off.'}
         </Text>
       </View>
 

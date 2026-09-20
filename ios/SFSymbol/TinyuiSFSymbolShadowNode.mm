@@ -1,7 +1,7 @@
 #if TINYUI_FEATURE_SF_SYMBOL
 
 #import "TinyuiSFSymbolShadowNode.h"
-#import "TinyuiSFSymbolImage.h"
+#import "Tinyui-Swift.h"
 #import <react/utils/FollyConvert.h>
 #include <react/renderer/core/LayoutConstraints.h>
 #include <react/renderer/core/LayoutContext.h>
@@ -16,7 +16,9 @@ Size TinyuiSFSymbolShadowNode::measureContent(
   @autoreleasepool {
     // UIImage and UIFont creation are safe off the main thread. No UIView or
     // main-queue sync is needed during concurrent Fabric layout.
-    UIImage *image = TinyuiSFSymbolImage(convertFollyDynamicToId(getConcreteProps().configuration), NO);
+    id configuration = convertFollyDynamicToId(getConcreteProps().configuration);
+    if (![configuration isKindOfClass:NSDictionary.class]) configuration = @{};
+    UIImage *image = [TinyuiSFSymbolImage imageWithConfiguration:configuration includeColors:NO];
     CGSize size = image == nil ? CGSizeZero : image.size;
     auto scale = layoutContext.pointScaleFactor > 0 ? layoutContext.pointScaleFactor : 1;
     return layoutConstraints.clamp({

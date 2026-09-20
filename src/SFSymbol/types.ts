@@ -16,20 +16,6 @@ export type SFSymbolScale =
   'default' | 'unspecified' | 'small' | 'medium' | 'large';
 export type SFSymbolRenderingMode =
   'automatic' | 'monochrome' | 'hierarchical' | 'palette' | 'multicolor';
-export type SFSymbolTextStyle =
-  | 'extraLargeTitle'
-  | 'extraLargeTitle2'
-  | 'largeTitle'
-  | 'title1'
-  | 'title2'
-  | 'title3'
-  | 'headline'
-  | 'subheadline'
-  | 'body'
-  | 'callout'
-  | 'footnote'
-  | 'caption1'
-  | 'caption2';
 
 export interface SFSymbolEffectOptions {
   /** Positive speed multiplier. Defaults to the system speed (1). */
@@ -125,13 +111,10 @@ export interface SFSymbolProps extends Omit<ViewProps, 'children'> {
   name: string;
   /** Load a system symbol (default) or a custom symbol in the app asset catalog. */
   source?: 'system' | 'asset';
-  /** Point size before font scaling. Defaults to 17. textStyle takes precedence. */
+  /** Point size before font scaling. Defaults to 17. */
   size?: number;
   weight?: SFSymbolWeight;
   scale?: SFSymbolScale;
-  textStyle?: SFSymbolTextStyle;
-  /** Font/PostScript name used to derive the symbol's font metrics. */
-  fontFamily?: string;
   /** Apply React Native's fontScale to the point size. Defaults to true. */
   allowFontScaling?: boolean;
   /** Maximum font scale, >= 1. Zero/undefined means no limit. */

@@ -36,7 +36,6 @@ export type {
   SFSymbolProps,
   SFSymbolRenderingMode,
   SFSymbolScale,
-  SFSymbolTextStyle,
   SFSymbolWeight,
 } from './SFSymbol';
 

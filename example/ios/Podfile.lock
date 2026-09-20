@@ -1431,7 +1431,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-tinyui (0.5.0):
+  - react-native-tinyui (1.1.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2161,7 +2161,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 8a4fda42c36c9a286abc297f65eb6c949650d97d
   React-microtasksnativemodule: fefb6931840ba0949954e07d67caa503c7e0879d
   react-native-safe-area-context: d3dcfc863b5b99a529b5ef257375f06046b3f751
-  react-native-tinyui: eede28f48122877cbc32e027629e8880ff280044
+  react-native-tinyui: 375fc9e9405250aad5d5f158f50d0a352101add3
   React-NativeModulesApple: 203fb2f050c7949cb500df1ac8bf7c09e8030fca
   React-networking: 368beb4a9537676c58fa72e7816cd969503fce69
   React-oscompat: 5361d0fa7905ba1c3b3c5e7c464d6be9d2d85f4b

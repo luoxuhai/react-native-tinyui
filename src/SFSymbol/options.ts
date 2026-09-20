@@ -93,8 +93,6 @@ export function serializeSFSymbol(props: SFSymbolProps, fontScale: number) {
       size: props.size ?? 17,
       weight: props.weight ?? 'unspecified',
       scale: props.scale ?? 'default',
-      textStyle: props.textStyle,
-      fontFamily: props.fontFamily,
       fontScale:
         props.allowFontScaling === false
           ? 1

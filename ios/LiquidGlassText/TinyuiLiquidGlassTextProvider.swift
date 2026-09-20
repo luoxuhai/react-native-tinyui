@@ -138,7 +138,6 @@ private struct LiquidGlassTextEffect: View {
     var result: Glass
     switch effect {
     case "regular": result = .regular
-    case "identity": result = .identity
     default: result = .clear
     }
     if let tintColor {

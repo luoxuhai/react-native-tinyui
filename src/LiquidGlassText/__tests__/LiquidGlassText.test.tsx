@@ -125,11 +125,11 @@ describe('LiquidGlassText bridge', () => {
   });
 
   it('resets tint and modifiers when they are removed', () => {
-    const props = render({ text: '', effect: 'identity' });
+    const props = render({ text: '' });
     expect(props.tintColor).toBeUndefined();
     expect(props.configuration).toMatchObject({
       text: '',
-      effect: 'identity',
+      effect: 'clear',
       interactive: false,
     });
     expect(props.accessibilityLabel).toBe('');

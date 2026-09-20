@@ -3,7 +3,7 @@ import type { ColorValue, StyleProp, TextStyle, ViewProps } from 'react-native';
 export type LiquidGlassTextFontDesign =
   'default' | 'serif' | 'monospaced' | 'rounded';
 
-export type LiquidGlassTextEffect = 'clear' | 'regular' | 'identity';
+export type LiquidGlassTextEffect = 'clear' | 'regular';
 
 /** React Native text styles supported by the native glass renderer. */
 export type LiquidGlassTextStyle = Readonly<
