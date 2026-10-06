@@ -80,7 +80,7 @@ Available components:
 - `Stepper`
 - `ConcentricView`
 - `SFSymbol`
-- `TipKit` (enables `TipKit.Popover`, `TipKit.configure` and `TipKit.invalidate`)
+- `TipKit` (enables `TipKit.Popover`, `TipKit.configure`, `TipKit.resetDatastore` and `TipKit.invalidate`)
 
 All components are enabled by default. Use an empty `components` array to
 compile only the TurboModule core. Run `pod install` again whenever this list
@@ -328,11 +328,45 @@ Coordinate this startup configuration with any other native TipKit integration.
 Initialization errors reject the promise; an enabled view mounted too early
 reports `E_TIPS_NOT_CONFIGURED` and can recover after configuration succeeds.
 
+`TipKit.resetDatastore()` returns a promise and clears all persisted tip, event
+and parameter records, making previously invalidated tips eligible again when
+their display conditions allow. It is primarily for testing the first-launch
+experience and **must be awaited before `TipKit.configure()`**:
+
+```ts
+// At app startup, when deliberately resetting tip history for testing:
+await TipKit.resetDatastore();
+await TipKit.configure({ displayFrequency: 'immediate' });
+```
+
+Once TinyUI has configured TipKit, resetting rejects with
+`E_TIPS_ALREADY_CONFIGURED`; restart the app process to run this sequence again.
+Fast Refresh does not reset native configuration. Other native reset failures
+also reject the promise (fallback code `E_TIPS_RESET`). Calling reset on every
+launch will erase users' tip history on every launch.
+
 `TipKit.invalidate(tipId, reason = 'actionPerformed')` also returns a promise and
 requires configuration first. It persistently invalidates the ID even when no
 view for that tip is mounted. `reason` may be `actionPerformed` or `tipClosed`.
 System invalidations can additionally report `displayCountExceeded`,
 `displayDurationExceeded`, or `unknown` through `onStatusChange`.
+
+`onStatusChange` reports eligibility, independently of actual bubble visibility:
+
+| Status | Meaning |
+| --- | --- |
+| `pending` | Currently ineligible, such as while waiting for the display frequency interval |
+| `available` | Eligible; presentation still requires `enabled`, a visible anchor and a free presenter |
+| `invalidated` | Persistently ineligible, with an invalidation `reason`; does not recover just by remounting or restarting |
+
+Invalidation reasons are `actionPerformed` (explicitly call `invalidate` after
+the feature is used), `tipClosed` (the system close button or explicit
+invalidation), `displayCountExceeded` (the `maxDisplayCount` limit), and
+`displayDurationExceeded` (a native duration limit; this wrapper does not expose
+a duration option). `unknown` is a fallback for future native reasons.
+Action buttons only emit `onActionPress`; they do not automatically invalidate.
+Setting `enabled={false}` or unmounting a tip does not itself invalidate it.
+Use `onVisibleChange` to observe whether the bubble is actually on screen.
 
 Keep IDs stable across renders, app launches and translations. All instances
 with the same ID share their TipKit history. Keep `maxDisplayCount` and
@@ -349,7 +383,7 @@ toggle `enabled` off and on to allow another attempt, subject to TipKit's state.
 The system close button can permanently invalidate a tip.
 
 This first version exposes popover tips and JS eligibility conditions. Inline
-`TipUIView`, native rule/event builders, TipGroup and datastore reset APIs are
+`TipUIView`, native rule/event builders and TipGroup are
 not exposed. The example's **New demo tip** button deliberately creates another
 ID for trying the behavior again without clearing the app's TipKit datastore.
 

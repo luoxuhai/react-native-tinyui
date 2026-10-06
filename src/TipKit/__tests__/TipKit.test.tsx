@@ -19,6 +19,7 @@ jest.mock('../TipPopoverNativeComponent', () => 'TinyuiTipPopoverView');
 
 const roots: ReactTestRenderer[] = [];
 const configure = jest.fn<(frequency: string) => Promise<void>>();
+const resetDatastore = jest.fn<() => Promise<void>>();
 const invalidate = jest.fn<(tipId: string, reason: string) => Promise<void>>();
 
 function render(props: Partial<TipPopoverProps> = {}) {
@@ -144,9 +145,11 @@ describe('TipKit', () => {
   function native() {
     jest.mocked(getNativeTinyui).mockReturnValue({
       configureTips: configure,
+      resetTipsDatastore: resetDatastore,
       invalidateTip: invalidate,
     } as unknown as ReturnType<typeof getNativeTinyui>);
     configure.mockResolvedValue(undefined);
+    resetDatastore.mockResolvedValue(undefined);
     invalidate.mockResolvedValue(undefined);
   }
 
@@ -171,12 +174,42 @@ describe('TipKit', () => {
     expect(configure).toHaveBeenCalledTimes(2);
   });
 
+  it('waits for a successful reset before startup configuration', async () => {
+    native();
+    let finishReset!: () => void;
+    resetDatastore.mockReturnValueOnce(
+      new Promise<void>((resolve) => {
+        finishReset = resolve;
+      })
+    );
+    const startup = TipKit.resetDatastore().then(() => TipKit.configure());
+    expect(assertComponentEnabled).toHaveBeenCalledWith('TipKit');
+    expect(resetDatastore).toHaveBeenCalledTimes(1);
+    expect(configure).not.toHaveBeenCalled();
+    finishReset();
+    await startup;
+    expect(configure).toHaveBeenCalledWith('daily');
+  });
+
+  it.each(['E_TIPS_ALREADY_CONFIGURED', 'E_TIPS_RESET'])(
+    'preserves native reset errors (%s) for callers',
+    async (code) => {
+      native();
+      const error = Object.assign(new Error('Reset failed'), { code });
+      resetDatastore.mockRejectedValueOnce(error);
+      await expect(TipKit.resetDatastore()).rejects.toBe(error);
+      expect(configure).not.toHaveBeenCalled();
+    }
+  );
+
   it('does not invoke native methods when the component was not compiled', async () => {
     native();
     jest.mocked(assertComponentEnabled).mockImplementation(() => {
       throw new Error('not installed');
     });
     await expect(TipKit.configure()).rejects.toThrow('not installed');
+    await expect(TipKit.resetDatastore()).rejects.toThrow('not installed');
     expect(configure).not.toHaveBeenCalled();
+    expect(resetDatastore).not.toHaveBeenCalled();
   });
 });

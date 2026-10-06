@@ -5,6 +5,16 @@ import { Popover } from './Popover';
 
 export const TipKit = {
   Popover,
+  /**
+   * Clear all persisted tip, event and parameter records for testing.
+   * Call and await this before configure(); rejects if already configured,
+   * including after Fast Refresh in the same app process.
+   */
+  async resetDatastore(): Promise<void> {
+    assertComponentEnabled('TipKit');
+    await getNativeTinyui().resetTipsDatastore();
+  },
+
   /** Configure TipKit once before mounting tips. Repeating the same options is safe. */
   async configure({
     displayFrequency = 'daily',

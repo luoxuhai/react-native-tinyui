@@ -30,6 +30,20 @@ import UIKit
 
   var isConfigured: Bool { frequency != nil }
 
+  @objc public static func resetDatastore(_ completion: (NSError?) -> Void) {
+    guard !shared.isConfigured else {
+      completion(error("E_TIPS_ALREADY_CONFIGURED", "Call and await TipKit.resetDatastore() before TipKit.configure(). Restart the app process to reset after configuration; Fast Refresh is not sufficient."))
+      return
+    }
+    do {
+      try Tips.resetDatastore()
+      shared.knownTips.removeAll()
+      completion(nil)
+    } catch {
+      completion(error as NSError)
+    }
+  }
+
   @objc public static func configure(_ frequency: String, completion: (NSError?) -> Void) {
     do {
       try shared.configure(frequency)

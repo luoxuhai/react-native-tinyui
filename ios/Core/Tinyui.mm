@@ -35,6 +35,24 @@
   return components;
 }
 
+- (void)resetTipsDatastore:(RCTPromiseResolveBlock)resolve
+                    reject:(RCTPromiseRejectBlock)reject
+{
+#if TINYUI_FEATURE_TIP_KIT
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [TinyuiTipsRuntime resetDatastore:^(NSError *error) {
+      if (error != nil) {
+        reject(error.userInfo[@"code"] ?: @"E_TIPS_RESET", error.localizedDescription, error);
+      } else {
+        resolve(nil);
+      }
+    }];
+  });
+#else
+  reject(@"E_TIP_NOT_INSTALLED", @"Enable TipKit in react-native-tinyui.components and run pod install.", nil);
+#endif
+}
+
 - (void)configureTips:(NSString *)displayFrequency
              resolve:(RCTPromiseResolveBlock)resolve
               reject:(RCTPromiseRejectBlock)reject

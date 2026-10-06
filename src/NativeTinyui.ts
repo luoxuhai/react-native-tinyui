@@ -7,6 +7,7 @@ export interface Spec extends TurboModule {
    * based on the `react-native-tinyui.components` array in package.json.
    */
   getEnabledComponents(): ReadonlyArray<string>;
+  resetTipsDatastore(): Promise<void>;
   configureTips(displayFrequency: string): Promise<void>;
   invalidateTip(tipId: string, reason: string): Promise<void>;
 }
