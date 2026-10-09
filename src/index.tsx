@@ -6,8 +6,8 @@ export type {
   TipError,
   TipInvalidationReason,
   TipPopoverProps,
+  TipViewProps,
   TipKitConfiguration,
-  TipStatus,
 } from './TipKit';
 export type {
   MenuActionOption,

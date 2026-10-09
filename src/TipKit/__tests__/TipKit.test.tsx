@@ -16,6 +16,7 @@ jest.mock('../../utils', () => ({
   getNativeTinyui: jest.fn(),
 }));
 jest.mock('../TipPopoverNativeComponent', () => 'TinyuiTipPopoverView');
+jest.mock('../TipViewNativeComponent', () => 'TinyuiTipView');
 
 const roots: ReactTestRenderer[] = [];
 const configure = jest.fn<(frequency: string) => Promise<void>>();
@@ -72,47 +73,49 @@ describe('TipKit.Popover', () => {
     expect(assertComponentEnabled).toHaveBeenCalledWith('TipKit');
   });
 
-  it('separates eligibility from visibility and ignores late events for an old tip', () => {
-    const onStatusChange = jest.fn();
-    const onVisibleChange = jest.fn();
-    const view = render({ onStatusChange, onVisibleChange });
-    const status = (tipId: string, value: string, reason = '') => {
-      view.props().onTipStatusChange?.({
-        nativeEvent: { tipId, status: value, reason },
-      } as Parameters<
-        NonNullable<NativeTipPopoverProps['onTipStatusChange']>
-      >[0]);
-    };
-    status('favorite.v1', 'available');
-    expect(onStatusChange).toHaveBeenLastCalledWith({ status: 'available' });
-    expect(onVisibleChange).not.toHaveBeenCalled();
-    view.update({ tipId: 'favorite.v2', onStatusChange, onVisibleChange });
-    status('favorite.v1', 'invalidated', 'tipClosed');
-    view.props().onTipVisibleChange?.({
-      nativeEvent: { tipId: 'favorite.v1', visible: false },
-    } as Parameters<
-      NonNullable<NativeTipPopoverProps['onTipVisibleChange']>
-    >[0]);
-    expect(onStatusChange).toHaveBeenCalledTimes(1);
-    expect(onVisibleChange).not.toHaveBeenCalled();
-    status('favorite.v2', 'invalidated', 'actionPerformed');
-    expect(onStatusChange).toHaveBeenLastCalledWith({
-      status: 'invalidated',
-      reason: 'actionPerformed',
-    });
-  });
-
-  it('forwards action identities without automatically invalidating the tip', () => {
+  it('forwards two button titles and identifies each click without automatically invalidating the tip', () => {
     const onActionPress = jest.fn();
+    const actions = [
+      { id: 'save', title: 'Save this item' },
+      { id: 'not-now', title: 'Not now' },
+    ];
     const view = render({
-      actions: [{ id: 'save', title: 'Save' }],
+      actions,
       onActionPress,
     });
-    view.props().onTipAction?.({
-      nativeEvent: { tipId: 'favorite.v1', id: 'save', title: 'Save' },
-    } as Parameters<NonNullable<NativeTipPopoverProps['onTipAction']>>[0]);
-    expect(onActionPress).toHaveBeenCalledWith({ id: 'save', title: 'Save' });
+    expect(view.props().actions).toEqual(actions);
+    for (const action of actions) {
+      view.props().onTipAction?.({
+        nativeEvent: { tipId: 'favorite.v1', ...action },
+      } as Parameters<NonNullable<NativeTipPopoverProps['onTipAction']>>[0]);
+    }
+    expect(onActionPress.mock.calls).toEqual(actions.map((action) => [action]));
     expect(getNativeTinyui).not.toHaveBeenCalled();
+  });
+
+  it('ignores late actions and errors for an old tip', () => {
+    const onActionPress = jest.fn();
+    const onError = jest.fn();
+    const view = render({ onActionPress, onError });
+    view.update({ tipId: 'favorite.v2', onActionPress, onError });
+    const action = (tipId: string) => {
+      view.props().onTipAction?.({
+        nativeEvent: { tipId, id: 'save', title: 'Save' },
+      } as Parameters<NonNullable<NativeTipPopoverProps['onTipAction']>>[0]);
+    };
+    const error = (tipId: string) => {
+      view.props().onTipError?.({
+        nativeEvent: { tipId, code: 'E_TIP', message: 'Failed' },
+      } as Parameters<NonNullable<NativeTipPopoverProps['onTipError']>>[0]);
+    };
+    action('favorite.v1');
+    error('favorite.v1');
+    expect(onActionPress).not.toHaveBeenCalled();
+    expect(onError).not.toHaveBeenCalled();
+    action('favorite.v2');
+    error('favorite.v2');
+    expect(onActionPress).toHaveBeenCalledWith({ id: 'save', title: 'Save' });
+    expect(onError).toHaveBeenCalledWith({ code: 'E_TIP', message: 'Failed' });
   });
 
   it.each<Partial<TipPopoverProps>>([
@@ -129,10 +132,10 @@ describe('TipKit.Popover', () => {
       ],
     },
     { actions: [{ id: '', title: 'Save' }] },
+    { actions: [{ id: 'save', title: ' ' }] },
   ])('rejects invalid persistent configuration: %p', (props) => {
     expect(() =>
       validateTip({
-        children: null,
         tipId: 'favorite.v1',
         title: 'Favorite',
         ...props,

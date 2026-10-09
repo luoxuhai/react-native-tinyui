@@ -9,16 +9,20 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SFSymbol, TipKit, type TipStatus } from 'react-native-tinyui';
+import {
+  SFSymbol,
+  TipKit,
+  type TipAction,
+  type TipError,
+} from 'react-native-tinyui';
 
 export function TipKitScreen() {
   const isFocused = useIsFocused();
   const [ready, setReady] = useState(false);
+  const [inline, setInline] = useState(true);
   const [enabled, setEnabled] = useState(true);
   const [saved, setSaved] = useState(false);
   const [tipId, setTipId] = useState('tinyui.example.favorite.v1');
-  const [status, setStatus] = useState<TipStatus>();
-  const [visible, setVisible] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -47,11 +51,44 @@ export function TipKitScreen() {
   const newTip = () => {
     setTipId(`tinyui.example.favorite.demo.${Date.now()}`);
     setSaved(false);
-    setStatus(undefined);
-    setVisible(false);
     setError('');
     setEnabled(true);
   };
+
+  const tipProps = {
+    tipId,
+    title: 'Keep your favorites close',
+    message: 'Save an item to find it quickly next time.',
+    systemImage: 'star',
+    actions: [
+      { id: 'save', title: 'Save this item' },
+      { id: 'not-now', title: 'Not now' },
+    ],
+    maxDisplayCount: 3,
+    enabled: enabled && isFocused && !saved,
+    onActionPress: ({ id }: TipAction) => {
+      if (id === 'save') save();
+      if (id === 'not-now') setEnabled(false);
+    },
+    onError: (event: TipError) => setError(`${event.code}: ${event.message}`),
+  };
+
+  const saveButton = (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={saved ? 'Saved' : 'Save favorite'}
+      onPress={save}
+      style={styles.saveButton}
+      testID="tip-save"
+    >
+      <SFSymbol
+        name={saved ? 'star.fill' : 'star'}
+        color={PlatformColor('systemBlueColor')}
+        size={22}
+      />
+      <Text style={styles.buttonText}>{saved ? 'Saved' : 'Save favorite'}</Text>
+    </Pressable>
+  );
 
   return (
     <ScrollView
@@ -62,47 +99,39 @@ export function TipKitScreen() {
       <Text style={styles.eyebrow}>TIPKIT · iOS 17+</Text>
       <Text style={styles.heading}>A hint, right on time.</Text>
       <Text style={styles.body}>
-        A native tip appears beside a feature when it can help. Save the item to
-        complete this tip.
+        Show a native tip inline or beside a feature. Save the item to complete
+        this tip, or choose Not now to hide it temporarily.
       </Text>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Inline view</Text>
+        <Switch
+          accessibilityLabel="Inline view"
+          value={inline}
+          onValueChange={setInline}
+          testID="tip-inline-mode"
+        />
+      </View>
 
       <View style={styles.stage}>
         <Text style={styles.stageTitle}>Weekend reading</Text>
         <Text style={styles.body}>Keep something worth coming back to.</Text>
         {ready ? (
-          <TipKit.Popover
-            tipId={tipId}
-            title="Keep your favorites close"
-            message="Save an item to find it quickly next time."
-            systemImage="star"
-            actions={[{ id: 'save', title: 'Save this item' }]}
-            maxDisplayCount={3}
-            enabled={enabled && isFocused && !saved}
-            arrowEdge="bottom"
-            onStatusChange={setStatus}
-            onVisibleChange={setVisible}
-            onActionPress={save}
-            onError={(event) => setError(`${event.code}: ${event.message}`)}
-            style={styles.anchor}
-            testID="tip-favorite-anchor"
-          >
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={saved ? 'Saved' : 'Save favorite'}
-              onPress={save}
-              style={styles.saveButton}
-              testID="tip-save"
+          inline ? (
+            <>
+              <TipKit.View {...tipProps} testID="tip-inline" />
+              <View style={styles.anchor}>{saveButton}</View>
+            </>
+          ) : (
+            <TipKit.Popover
+              {...tipProps}
+              arrowEdge="bottom"
+              style={styles.anchor}
+              testID="tip-favorite-anchor"
             >
-              <SFSymbol
-                name={saved ? 'star.fill' : 'star'}
-                color={PlatformColor('systemBlueColor')}
-                size={22}
-              />
-              <Text style={styles.buttonText}>
-                {saved ? 'Saved' : 'Save favorite'}
-              </Text>
-            </Pressable>
-          </TipKit.Popover>
+              {saveButton}
+            </TipKit.Popover>
+          )
         ) : (
           <Text style={styles.body}>Preparing tips…</Text>
         )}
@@ -123,12 +152,6 @@ export function TipKitScreen() {
             testID="tip-enabled"
           />
         </View>
-        <Text style={styles.caption} testID="tip-status">
-          {`Status: ${status?.status ?? 'waiting'}${status?.status === 'invalidated' ? ` · ${status.reason}` : ''}`}
-        </Text>
-        <Text style={styles.caption} testID="tip-visible">
-          {visible ? 'Bubble is visible' : 'Bubble is hidden'}
-        </Text>
         {!!error && (
           <Text style={styles.error} testID="tip-error">
             {error}

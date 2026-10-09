@@ -69,24 +69,6 @@ using namespace facebook::react;
   [super updateProps:props oldProps:oldProps];
 }
 
-- (void)onTipStatusWithTipId:(NSString *)tipId status:(NSString *)status reason:(NSString *)reason
-{
-  if (_eventEmitter == nullptr) return;
-  std::static_pointer_cast<const TinyuiTipPopoverViewEventEmitter>(_eventEmitter)->onTipStatusChange({
-    .tipId = std::string(tipId.UTF8String ?: ""),
-    .status = std::string(status.UTF8String ?: ""),
-    .reason = std::string(reason.UTF8String ?: ""),
-  });
-}
-
-- (void)onTipVisibleWithTipId:(NSString *)tipId visible:(BOOL)visible
-{
-  if (_eventEmitter == nullptr) return;
-  std::static_pointer_cast<const TinyuiTipPopoverViewEventEmitter>(_eventEmitter)->onTipVisibleChange({
-    .tipId = std::string(tipId.UTF8String ?: ""), .visible = static_cast<bool>(visible),
-  });
-}
-
 - (void)onTipActionWithTipId:(NSString *)tipId id:(NSString *)identifier title:(NSString *)title
 {
   if (_eventEmitter == nullptr) return;

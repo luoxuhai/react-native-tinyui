@@ -2,9 +2,11 @@ import { assertComponentEnabled, getNativeTinyui } from '../utils';
 import type { TipInvalidationReason, TipKitConfiguration } from './types';
 import { validateTipId } from './validation';
 import { Popover } from './Popover';
+import { View } from './View';
 
 export const TipKit = {
   Popover,
+  View,
   /**
    * Clear all persisted tip, event and parameter records for testing.
    * Call and await this before configure(); rejects if already configured,
@@ -53,5 +55,5 @@ export type {
   TipInvalidationReason,
   TipKitConfiguration,
   TipPopoverProps,
-  TipStatus,
+  TipViewProps,
 } from './types';

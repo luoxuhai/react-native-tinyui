@@ -1,0 +1,28 @@
+import {
+  codegenNativeComponent,
+  type CodegenTypes,
+  type ViewProps,
+} from 'react-native';
+import type { DirectEventHandler } from 'react-native/Libraries/Types/CodegenTypes';
+
+export interface NativeTipViewProps extends ViewProps {
+  tipId: string;
+  title: string;
+  message?: string;
+  systemImage?: string;
+  actions?: ReadonlyArray<Readonly<{ id: string; title: string }>>;
+  enabled?: boolean;
+  maxDisplayCount?: CodegenTypes.Int32;
+  ignoresDisplayFrequency?: boolean;
+  arrowEdge?: string;
+  onTipAction?: DirectEventHandler<
+    Readonly<{ tipId: string; id: string; title: string }>
+  >;
+  onTipError?: DirectEventHandler<
+    Readonly<{ tipId: string; code: string; message: string }>
+  >;
+}
+
+export default codegenNativeComponent<NativeTipViewProps>('TinyuiTipView', {
+  excludedPlatforms: ['android'],
+});

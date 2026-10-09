@@ -15,12 +15,6 @@ export interface NativeTipPopoverProps extends ViewProps {
   maxDisplayCount?: CodegenTypes.Int32;
   ignoresDisplayFrequency?: boolean;
   arrowEdge?: string;
-  onTipStatusChange?: DirectEventHandler<
-    Readonly<{ tipId: string; status: string; reason: string }>
-  >;
-  onTipVisibleChange?: DirectEventHandler<
-    Readonly<{ tipId: string; visible: boolean }>
-  >;
   onTipAction?: DirectEventHandler<
     Readonly<{ tipId: string; id: string; title: string }>
   >;

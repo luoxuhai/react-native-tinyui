@@ -172,6 +172,9 @@
         },
         "TinyuiTipPopoverView": {
           "className": "TinyuiTipPopoverView"
+        },
+        "TinyuiTipView": {
+          "className": "TinyuiTipView"
         }
       }
     }

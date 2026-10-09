@@ -2,8 +2,6 @@ import TipKit
 import UIKit
 
 @objc public protocol TinyuiTipPopoverDelegate: AnyObject {
-  func onTipStatus(tipId: String, status: String, reason: String)
-  func onTipVisible(tipId: String, visible: Bool)
   func onTipAction(tipId: String, id: String, title: String)
   func onTipError(tipId: String, code: String, message: String)
 }
@@ -12,21 +10,22 @@ import UIKit
 @objc public final class TinyuiTipPopoverProvider: UIView, UIPopoverPresentationControllerDelegate {
   private weak var delegate: TinyuiTipPopoverDelegate?
   @objc public weak var parentViewController: UIViewController? {
-    didSet { TinyuiTipsRuntime.shared.requestUpdate() }
+    didSet {
+      guard oldValue !== parentViewController else { return }
+      stop()
+      start()
+    }
   }
   private var tip: TinyuiTip?
   private var enabled = false
   private var arrowEdge = "auto"
   private var observation: Task<Void, Never>?
-  private var observationGeneration = 0
-  private var status: Tips.Status?
+  private var shouldDisplay = false
   private var lastError: String?
-  private var suppressed = false
   private var controller: TipUIPopoverViewController?
   private var presentedTipId: String?
   private var isPresenting = false
   private var isDismissing = false
-  private var reportedVisible = false
 
   @objc public convenience init(delegate: TinyuiTipPopoverDelegate) {
     self.init(frame: .zero)
@@ -34,60 +33,48 @@ import UIKit
   }
 
   @objc public func configure(_ configuration: [String: Any], enabled: Bool, arrowEdge: String) {
-    let nextTip = TinyuiTip(
-      id: configuration["tipId"] as? String ?? "",
-      titleString: configuration["title"] as? String ?? "",
-      messageString: configuration["message"] as? String ?? "",
-      symbolName: configuration["systemImage"] as? String ?? "",
-      actionContents: (configuration["actions"] as? [[String: String]] ?? []).map {
-        TinyuiTip.ActionContent(id: $0["id"] ?? "", title: $0["title"] ?? "")
-      },
-      maximumDisplayCount: configuration["maxDisplayCount"] as? Int ?? 0,
-      ignoresFrequency: configuration["ignoresDisplayFrequency"] as? Bool ?? false
-    )
-    if tip?.id != nextTip.id {
-      stopObservation()
-      status = nil
+    let nextTip = TinyuiTip(configuration: configuration)
+    if tip?.id != nextTip.id || self.enabled != enabled {
+      stop()
       lastError = nil
-      suppressed = false
     }
-    if !self.enabled && enabled { suppressed = false }
     tip = nextTip
     self.enabled = enabled
     self.arrowEdge = arrowEdge
-    TinyuiTipsRuntime.shared.requestUpdate()
+    // Validate changed options even when an observation is already running.
+    do {
+      try TinyuiTipsRuntime.shared.remember(nextTip)
+    } catch {
+      stop()
+      let error = error as NSError
+      reportError(error.userInfo["code"] as? String ?? "E_TIP", error.localizedDescription)
+      return
+    }
+    lastError = nil
+    configureArrow()
+    start()
   }
 
   override public func didMoveToWindow() {
     super.didMoveToWindow()
-    if window == nil {
-      stopObservation()
-      dismissTip()
-      TinyuiTipsRuntime.shared.unregister(self)
-    } else {
-      TinyuiTipsRuntime.shared.register(self)
-    }
+    if window == nil { stop() } else { start() }
   }
 
   override public func layoutSubviews() {
     super.layoutSubviews()
     configureArrow()
-    TinyuiTipsRuntime.shared.requestUpdate()
+    // Start once Fabric has given the anchor a size. Layout changes alone do
+    // not request another presentation after a tip has been dismissed.
+    start()
   }
 
-  var needsMonitoring: Bool {
-    window?.windowScene?.activationState == .foregroundActive &&
-      enabled && status == .available && !suppressed && lastError == nil
-  }
-
-  func updatePresentation() {
+  private func start() {
+    guard observation == nil, enabled, let tip, let window,
+          !bounds.isEmpty, let parent = parentViewController,
+          parent.viewIfLoaded?.window === window else { return }
     let runtime = TinyuiTipsRuntime.shared
-    guard let tip else { dismissTip(); return }
-    guard window != nil, runtime.isConfigured else {
-      if window != nil && enabled && !runtime.isConfigured {
-        reportError("E_TIPS_NOT_CONFIGURED", "Call and await TipKit.configure() before displaying tips.")
-      }
-      dismissTip()
+    guard runtime.isConfigured else {
+      reportError("E_TIPS_NOT_CONFIGURED", "Call and await TipKit.configure() before displaying tips.")
       return
     }
     do {
@@ -96,25 +83,38 @@ import UIKit
     } catch {
       let error = error as NSError
       reportError(error.userInfo["code"] as? String ?? "E_TIP", error.localizedDescription)
-      dismissTip()
       return
     }
-    startObservation(tip)
 
+    observation = Task { @MainActor [weak self] in
+      for await shouldDisplay in tip.shouldDisplayUpdates {
+        guard !Task.isCancelled, let self else { break }
+        self.shouldDisplay = shouldDisplay
+        self.updatePresentation()
+      }
+    }
+  }
+
+  private func stop() {
+    observation?.cancel()
+    observation = nil
+    shouldDisplay = false
+    dismissTip()
+  }
+
+  private func updatePresentation() {
     if let controller, !isPresenting, !isDismissing, controller.presentingViewController == nil {
       // Dismissal may originate inside TipKit rather than through the delegate.
-      suppressed = true
       finishDismissal(controller)
       return
     }
-    let presenter = eligiblePresenter()
-    guard enabled, status == .available, !suppressed, presenter != nil,
+    guard enabled, window != nil, let tip, shouldDisplay,
           presentedTipId == nil || presentedTipId == tip.id else {
       dismissTip()
       return
     }
-    guard controller == nil, runtime.activeProvider == nil, let presenter else { return }
-    runtime.activeProvider = self
+    // Like Tipster's TipPresenter, only present when the host is free.
+    guard controller == nil, let presenter = availablePresenter() else { return }
     let tipController = TipUIPopoverViewController(tip, sourceItem: self) { [weak self] action in
       guard let self, self.tip?.id == tip.id,
             let content = tip.actionContents.first(where: { $0.id == action.id }) else { return }
@@ -125,84 +125,22 @@ import UIKit
     presentedTipId = tip.id
     configureArrow()
     isPresenting = true
-    presenter.present(tipController, animated: true) { [weak self, weak tipController] in
-      guard let self, let tipController, self.controller === tipController else { return }
+    // Retain the provider through the animation so a Fabric unmount can still
+    // dismiss this presentation in the completion, without a global owner.
+    presenter.present(tipController, animated: true) { [self] in
+      guard self.controller === tipController else { return }
       self.isPresenting = false
-      if tipController.presentingViewController != nil {
-        self.reportedVisible = true
-        self.delegate?.onTipVisible(tipId: tip.id, visible: true)
-      }
-      TinyuiTipsRuntime.shared.requestUpdate()
+      self.updatePresentation()
     }
   }
 
-  private func startObservation(_ tip: TinyuiTip) {
-    guard observation == nil else { return }
-    observationGeneration += 1
-    let generation = observationGeneration
-    observation = Task { @MainActor [weak self] in
-      for await status in tip.statusUpdates {
-        guard !Task.isCancelled, let self, self.observationGeneration == generation else { break }
-        self.status = status
-        let state: String
-        let reason: String
-        switch status {
-        case .pending: state = "pending"; reason = ""
-        case .available: state = "available"; reason = ""
-        case .invalidated(let invalidation):
-          state = "invalidated"
-          switch invalidation {
-          case .actionPerformed: reason = "actionPerformed"
-          case .tipClosed: reason = "tipClosed"
-          case .displayCountExceeded: reason = "displayCountExceeded"
-          case .displayDurationExceeded: reason = "displayDurationExceeded"
-          @unknown default: reason = "unknown"
-          }
-        @unknown default: state = "pending"; reason = ""
-        }
-        self.delegate?.onTipStatus(tipId: tip.id, status: state, reason: reason)
-        TinyuiTipsRuntime.shared.requestUpdate()
-      }
-    }
-  }
-
-  private func stopObservation() {
-    observationGeneration += 1
-    observation?.cancel()
-    observation = nil
-    status = nil
-  }
-
-  /// Reject obscured/detached anchors and non-current navigation/tab screens.
-  private func eligiblePresenter() -> UIViewController? {
-    guard let window, window.windowScene?.activationState == .foregroundActive,
-          !window.isHidden, let parent = parentViewController,
-          parent.viewIfLoaded?.window === window, !bounds.isEmpty else { return nil }
-
-    var visibleRect = convert(bounds, to: window)
-    var ancestor: UIView? = self
-    while let view = ancestor {
-      guard !view.isHidden, view.alpha > 0.01 else { return nil }
-      if view.clipsToBounds {
-        visibleRect = visibleRect.intersection(view.convert(view.bounds, to: window))
-      }
-      ancestor = view.superview
-    }
-    guard !visibleRect.intersection(window.bounds).isEmpty else { return nil }
-
-    var child = parent
+  private func availablePresenter() -> UIViewController? {
+    guard let window, let parent = parentViewController,
+          parent.viewIfLoaded?.window === window else { return nil }
     var ancestorController: UIViewController? = parent
     while let current = ancestorController {
-      guard !current.isBeingDismissed, !current.isBeingPresented else { return nil }
-      if let navigation = current as? UINavigationController,
-         navigation.topViewController !== child { return nil }
-      if let tabs = current as? UITabBarController,
-         tabs.selectedViewController !== child { return nil }
-      if let presented = current.presentedViewController, presented !== controller { return nil }
-      // Wait for navigation animations before presenting. Do not treat our own
-      // popover's presentation transition as the anchor leaving the screen.
-      if controller == nil && current.transitionCoordinator != nil { return nil }
-      child = current
+      guard !current.isBeingDismissed, !current.isBeingPresented,
+            current.presentedViewController == nil else { return nil }
       ancestorController = current.parent
     }
     return parent
@@ -226,28 +164,24 @@ import UIKit
     guard let controller, !isPresenting, !isDismissing else { return }
     guard controller.presentingViewController != nil else { finishDismissal(controller); return }
     isDismissing = true
-    controller.dismiss(animated: window != nil) { [weak self, weak controller] in
-      guard let self, let controller else { return }
+    controller.dismiss(animated: window != nil) { [self] in
+      guard self.controller === controller else { return }
       self.finishDismissal(controller)
+      // Props may have changed while the dismissal animation was running.
+      self.updatePresentation()
     }
   }
 
   private func finishDismissal(_ dismissed: TipUIPopoverViewController) {
     guard controller === dismissed else { return }
-    if reportedVisible, let presentedTipId {
-      delegate?.onTipVisible(tipId: presentedTipId, visible: false)
-    }
     controller = nil
     presentedTipId = nil
     isPresenting = false
     isDismissing = false
-    reportedVisible = false
-    TinyuiTipsRuntime.shared.release(self)
   }
 
   public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
     guard let controller, presentationController.presentedViewController === controller else { return }
-    suppressed = true
     finishDismissal(controller)
   }
 
@@ -264,12 +198,9 @@ import UIKit
   @objc public func reset() {
     enabled = false
     tip = nil
-    suppressed = false
     lastError = nil
-    stopObservation()
-    dismissTip()
+    stop()
     parentViewController = nil
-    TinyuiTipsRuntime.shared.unregister(self)
   }
 
   deinit { observation?.cancel() }

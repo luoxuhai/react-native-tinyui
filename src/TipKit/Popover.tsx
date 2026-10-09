@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { assertComponentEnabled } from '../utils';
 import NativeTipPopoverView from './TipPopoverNativeComponent';
-import type { TipPopoverProps, TipStatus } from './types';
+import type { TipPopoverProps } from './types';
 import { validateTip } from './validation';
 
 export const Popover = forwardRef<ComponentRef<typeof View>, TipPopoverProps>(
@@ -21,8 +21,6 @@ export const Popover = forwardRef<ComponentRef<typeof View>, TipPopoverProps>(
       maxDisplayCount,
       ignoresDisplayFrequency = false,
       arrowEdge = 'auto',
-      onStatusChange,
-      onVisibleChange,
       onActionPress,
       onError,
       ...viewProps
@@ -42,24 +40,6 @@ export const Popover = forwardRef<ComponentRef<typeof View>, TipPopoverProps>(
         maxDisplayCount={maxDisplayCount ?? 0}
         ignoresDisplayFrequency={ignoresDisplayFrequency}
         arrowEdge={arrowEdge}
-        onTipStatusChange={({ nativeEvent }) => {
-          if (nativeEvent.tipId !== tipId) return;
-          if (nativeEvent.status === 'invalidated') {
-            onStatusChange?.({
-              status: 'invalidated',
-              reason: nativeEvent.reason,
-            } as TipStatus);
-          } else if (
-            nativeEvent.status === 'pending' ||
-            nativeEvent.status === 'available'
-          ) {
-            onStatusChange?.({ status: nativeEvent.status });
-          }
-        }}
-        onTipVisibleChange={({ nativeEvent }) => {
-          if (nativeEvent.tipId === tipId)
-            onVisibleChange?.(nativeEvent.visible);
-        }}
         onTipAction={({ nativeEvent }) => {
           if (nativeEvent.tipId === tipId) {
             onActionPress?.({ id: nativeEvent.id, title: nativeEvent.title });

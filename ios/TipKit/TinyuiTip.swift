@@ -29,3 +29,19 @@ struct TinyuiTip: Tip, Sendable {
     return result
   }
 }
+
+extension TinyuiTip {
+  init(configuration: [String: Any]) {
+    self.init(
+      id: configuration["tipId"] as? String ?? "",
+      titleString: configuration["title"] as? String ?? "",
+      messageString: configuration["message"] as? String ?? "",
+      symbolName: configuration["systemImage"] as? String ?? "",
+      actionContents: (configuration["actions"] as? [[String: String]] ?? []).map {
+        ActionContent(id: $0["id"] ?? "", title: $0["title"] ?? "")
+      },
+      maximumDisplayCount: configuration["maxDisplayCount"] as? Int ?? 0,
+      ignoresFrequency: configuration["ignoresDisplayFrequency"] as? Bool ?? false
+    )
+  }
+}

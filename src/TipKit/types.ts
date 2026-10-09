@@ -11,19 +11,10 @@ export interface TipKitConfiguration {
 
 export type TipInvalidationReason = 'actionPerformed' | 'tipClosed';
 
-export type TipStatus =
-  | { status: 'pending' | 'available' }
-  | {
-      status: 'invalidated';
-      reason:
-        | TipInvalidationReason
-        | 'displayCountExceeded'
-        | 'displayDurationExceeded'
-        | 'unknown';
-    };
-
 export interface TipAction {
+  /** Unique nonempty identity within this tip, returned by `onActionPress`. */
   id: string;
+  /** Nonempty button label, already localized by the app. */
   title: string;
 }
 
@@ -32,26 +23,34 @@ export interface TipError {
   message: string;
 }
 
-export interface TipPopoverProps extends Omit<ViewProps, 'children'> {
-  /** Anchor content. Its existing touch handlers are preserved. */
-  children: ReactNode;
+export interface TipContentProps extends Omit<ViewProps, 'children'> {
   /** Stable identity used by TipKit to persist this tip's history. */
   tipId: string;
   title: string;
   message?: string;
   systemImage?: string;
+  /** Native action buttons, each with its own id and title; TipKit controls their layout. */
   actions?: readonly TipAction[];
   /** Allows presentation when TipKit is also eligible. Defaults to true. */
   enabled?: boolean;
   /** Omit to leave the number of presentations unlimited. */
   maxDisplayCount?: number;
   ignoresDisplayFrequency?: boolean;
-  /** Preferred arrow edge on the bubble; UIKit may adapt to available space. */
-  arrowEdge?: 'top' | 'bottom' | 'leading' | 'trailing' | 'auto';
-  /** TipKit eligibility, independent of whether the bubble is on screen. */
-  onStatusChange?: (status: TipStatus) => void;
-  onVisibleChange?: (visible: boolean) => void;
-  /** Actions do not automatically invalidate the tip. */
+  /** Receives the tapped button's id and title; does not automatically invalidate the tip. */
   onActionPress?: (action: TipAction) => void;
   onError?: (error: TipError) => void;
+}
+
+export interface TipPopoverProps extends TipContentProps {
+  /** Anchor content. Its existing touch handlers are preserved. */
+  children: ReactNode;
+  /** Preferred arrow edge on the bubble; UIKit may adapt to available space. */
+  arrowEdge?: 'top' | 'bottom' | 'leading' | 'trailing' | 'auto';
+}
+
+export interface TipViewProps extends TipContentProps {
+  /** Inline tips render native content and do not take anchor children. */
+  children?: never;
+  /** Optional arrow on the inline view. Defaults to no arrow. */
+  arrowEdge?: 'top' | 'bottom' | 'leading' | 'trailing' | 'none';
 }

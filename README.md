@@ -80,7 +80,23 @@ Available components:
 - `Stepper`
 - `ConcentricView`
 - `SFSymbol`
-- `TipKit` (enables `TipKit.Popover`, `TipKit.configure`, `TipKit.resetDatastore` and `TipKit.invalidate`)
+- `TipKit` (enables `TipKit.View`, `TipKit.Popover`, `TipKit.configure`, `TipKit.resetDatastore` and `TipKit.invalidate`)
+
+`TipKit` is one optional module containing both native views,
+`TinyuiTipPopoverView` and `TinyuiTipView`. Select it once in your app's
+`package.json` to include both:
+
+```json
+{
+  "react-native-tinyui": {
+    "components": ["TipKit"]
+  }
+}
+```
+
+The JavaScript API is also `TipKit`, imported from `react-native-tinyui` or
+`react-native-tinyui/tip-kit`. The library's Codegen configuration registers the
+two native view classes individually; it is not the optional-module selection.
 
 All components are enabled by default. Use an empty `components` array to
 compile only the TurboModule core. Run `pod install` again whenever this list
@@ -256,11 +272,15 @@ outer container, not the presented content.
 
 <img src="docs/screenshots/tip-kit.png" alt="TipKit popover with a save action anchored to the favorite button" width="320" />
 
+`TipKit.View` embeds a native `TipUIView` directly in your layout.
 `TipKit.Popover` anchors a native TipKit `TipUIPopoverViewController` to ordinary
 React Native children on iOS 17+. The children retain their own touch handlers;
 the tip appears automatically when both `enabled` and TipKit's eligibility allow
 it. Its text, SF Symbol, action buttons, display history and invalidation use
 Apple's TipKit framework. No additional package is required.
+
+Both components support the same tip content, action callbacks, display options
+and persistent history on iOS 17+.
 
 Configure TipKit once, **before mounting tips** (for example, during app startup):
 
@@ -278,12 +298,18 @@ await TipKit.configure({ displayFrequency: 'daily' });
   systemImage="star"
   enabled={isScreenFocused && !hasFavorites}
   maxDisplayCount={3}
-  actions={[{ id: 'learn-more', title: 'Learn more' }]}
-  onActionPress={({ id }) => {
-    if (id === 'learn-more') openHelp();
+  actions={[
+    { id: 'save', title: 'Save this item' },
+    { id: 'learn-more', title: 'Learn more' },
+  ]}
+  onActionPress={async ({ id }) => {
+    if (id === 'save') {
+      await saveFavorite();
+      await TipKit.invalidate('favorite-feature-v1', 'actionPerformed');
+    } else if (id === 'learn-more') {
+      openHelp();
+    }
   }}
-  onStatusChange={(status) => console.log(status)}
-  onVisibleChange={(visible) => console.log({ visible })}
   onError={(error) => console.warn(error.message)}
 >
   <Pressable onPress={async () => {
@@ -295,28 +321,73 @@ await TipKit.configure({ displayFrequency: 'daily' });
 </TipKit.Popover>;
 ```
 
+For an inline tip, use `TipKit.View` without anchor children (after the same
+startup configuration):
+
+```tsx
+<TipKit.View
+  tipId="favorite-inline-v1"
+  title="Keep your favorites close"
+  message="Save an item to find it quickly next time."
+  systemImage="star"
+  enabled={isScreenFocused && !hasFavorites}
+  actions={[
+    { id: 'save', title: 'Save this item' },
+    { id: 'learn-more', title: 'Learn more' },
+  ]}
+  onActionPress={async ({ id }) => {
+    if (id === 'save') {
+      await saveFavorite();
+      await TipKit.invalidate('favorite-inline-v1', 'actionPerformed');
+    } else if (id === 'learn-more') {
+      openHelp();
+    }
+  }}
+/>
+```
+
+`TipKit.View` fills the available width and measures its native content height.
+The card keeps TipKit's preferred width within that space and aligns to the
+leading edge; the system also chooses the action buttons' layout.
+Give it a bounded width (for example, a stretched child of a column or an
+explicit `style.width`); no fixed height is needed. When disabled or ineligible,
+its content height becomes zero. Explicit height/min-height, padding, margins
+and a parent's `gap` still follow normal React Native layout rules. Native
+measurement updates Fabric directly, including after width and Dynamic Type
+changes; there is no JavaScript size or status callback. The inline arrow is
+optional: `arrowEdge` accepts `top`, `bottom`, `leading`, `trailing` or `none`
+(default). `children` is only supported by `TipKit.Popover`.
+
+The remaining props are shared by both components:
+
 | Prop | Description | Default |
 | --- | --- | --- |
 | `tipId` | Required stable identity for persistent history | — |
 | `title` | Required nonempty title, already localized by the app | — |
 | `message` | Supporting plain text | — |
 | `systemImage` | SF Symbol name | — |
-| `actions` | Buttons with unique nonempty `{ id, title }` values | `[]` |
+| `actions` | Native buttons with unique nonempty `id` and nonempty `title`; TipKit chooses their layout | `[]` |
 | `enabled` | Allows presentation; does not override TipKit eligibility | `true` |
 | `maxDisplayCount` | Positive integer; automatically invalidates after this many displays | Unlimited |
 | `ignoresDisplayFrequency` | Exempts this tip from the app-wide display interval | `false` |
-| `arrowEdge` | Preferred bubble edge: `top`, `bottom`, `leading`, `trailing`, `auto` | `auto` |
-| `onStatusChange` | `{ status: 'pending' \| 'available' }` or `{ status: 'invalidated', reason }` | — |
-| `onVisibleChange` | Whether the native bubble is actually visible | — |
+| `arrowEdge` | `top`, `bottom`, `leading`, `trailing`; Popover also accepts `auto`, View accepts `none` | Popover: `auto`; View: `none` |
 | `onActionPress` | Receives the selected `{ id, title }`; does not automatically invalidate | — |
 | `onError` | Receives `{ code, message }`; otherwise a warning is logged | — |
 
-The component accepts standard `ViewProps` and a native view ref. `style` lays
-out the anchor, not the bubble. UIKit chooses the bubble's size and may adapt
+Both components accept standard `ViewProps` and a native view ref. For Popover,
+`style` lays out the anchor, not the bubble. UIKit chooses the bubble's size and may adapt
 the arrow to available space; leading/trailing follow layout direction. Bubble
 content is native text/images/actions; `children` supplies only the anchor.
-Content edits apply to the next presentation; the currently visible bubble
-retains the content and action labels it was presented with.
+Content and arrow edits on an inline tip apply the next time it is shown.
+Content edits on a popover apply to the next presentation. A currently visible
+tip retains the content and action labels it was shown with.
+
+To show two action buttons, provide two entries in `actions`, as above. Each
+`title` controls that button's label. `onActionPress` receives the clicked
+button's `{ id, title }`; use `id` to handle the buttons separately. Titles may
+be translated without changing action IDs. To temporarily hide a tip in response
+to an action, set `enabled` to `false`; to permanently complete it, call
+`TipKit.invalidate`.
 
 ### Configuration and lifetime
 
@@ -326,7 +397,9 @@ app-wide TipKit setting. Repeating the same configuration is safe, including
 after Fast Refresh; changing it later rejects with `E_TIPS_ALREADY_CONFIGURED`.
 Coordinate this startup configuration with any other native TipKit integration.
 Initialization errors reject the promise; an enabled view mounted too early
-reports `E_TIPS_NOT_CONFIGURED` and can recover after configuration succeeds.
+reports `E_TIPS_NOT_CONFIGURED`. Await configuration before mounting tips. If a
+tip was already mounted, remount it or toggle `enabled` after configuration to
+start observing it.
 
 `TipKit.resetDatastore()` returns a promise and clears all persisted tip, event
 and parameter records, making previously invalidated tips eligible again when
@@ -348,25 +421,14 @@ launch will erase users' tip history on every launch.
 `TipKit.invalidate(tipId, reason = 'actionPerformed')` also returns a promise and
 requires configuration first. It persistently invalidates the ID even when no
 view for that tip is mounted. `reason` may be `actionPerformed` or `tipClosed`.
-System invalidations can additionally report `displayCountExceeded`,
-`displayDurationExceeded`, or `unknown` through `onStatusChange`.
 
-`onStatusChange` reports eligibility, independently of actual bubble visibility:
-
-| Status | Meaning |
-| --- | --- |
-| `pending` | Currently ineligible, such as while waiting for the display frequency interval |
-| `available` | Eligible; presentation still requires `enabled`, a visible anchor and a free presenter |
-| `invalidated` | Persistently ineligible, with an invalidation `reason`; does not recover just by remounting or restarting |
-
-Invalidation reasons are `actionPerformed` (explicitly call `invalidate` after
-the feature is used), `tipClosed` (the system close button or explicit
-invalidation), `displayCountExceeded` (the `maxDisplayCount` limit), and
-`displayDurationExceeded` (a native duration limit; this wrapper does not expose
-a duration option). `unknown` is a fallback for future native reasons.
+Both native views observe TipKit's `shouldDisplayUpdates` to show or remove
+the tip. Eligibility and visibility changes are not sent to JavaScript.
+Call `invalidate` with `actionPerformed` after the feature is used, or with
+`tipClosed` to permanently dismiss the tip. TipKit also handles the system
+close button and display limits.
 Action buttons only emit `onActionPress`; they do not automatically invalidate.
 Setting `enabled={false}` or unmounting a tip does not itself invalidate it.
-Use `onVisibleChange` to observe whether the bubble is actually on screen.
 
 Keep IDs stable across renders, app launches and translations. All instances
 with the same ID share their TipKit history. Keep `maxDisplayCount` and
@@ -375,16 +437,30 @@ with the same ID share their TipKit history. Keep `maxDisplayCount` and
 tip. Hiding a tip, unmounting it or reconfiguring TinyUI never resets history.
 
 Use `enabled={isScreenFocused && businessCondition}` with your navigation
-library. TinyUI also waits for a visible anchor and a free presenter, and
-dismisses on detachment or when the anchor leaves the visible area. It presents
-at most one TinyUI tip at a time and waits while another modal occupies the
-presenter. An outside dismissal suppresses immediate reopening for that mount;
-toggle `enabled` off and on to allow another attempt, subject to TipKit's state.
-The system close button can permanently invalidate a tip.
+library. Each mounted, enabled Popover anchor starts its own `shouldDisplayUpdates`
+observation once it has a size and a parent view controller. Disabling,
+detaching or recycling the component stops observation and dismisses its
+bubble; changing `tipId` starts a new observation. This follows the independent
+`start()` / `stop()` structure of
+[Tipster's TipPresenter](https://github.com/chockenberry/Tipster/blob/081922aa9421d764c436cbe16ad9e2601cd52740/Tipster/TipKitHelper.swift).
 
-This first version exposes popover tips and JS eligibility conditions. Inline
-`TipUIView`, native rule/event builders and TipGroup are
-not exposed. The example's **New demo tip** button deliberately creates another
+Popover presentation is skipped when the host view controller or an ancestor already
+presents another controller. There is no global anchor registry, presentation
+queue, polling timer, app-state observer or scroll visibility tracking.
+Closing another tip or modal does not automatically retry a skipped
+presentation. A later eligibility update, remount or re-enabling the component
+can trigger another attempt. An outside dismissal only cleans up the current
+presentation; there is no additional per-mount suppression policy. The system
+close button can permanently invalidate a tip.
+
+Inline tips start observing when attached to a window and stop when disabled,
+detached or recycled. They do not present a view controller or block interaction
+with the rest of the screen. Both presentations use the same datastore; an
+invalidation affects every instance of the same `tipId`.
+
+Native rule/event builders and TipGroup are not exposed. The example's
+**Inline view** switch toggles between both presentations. Its **New demo tip**
+button deliberately creates another
 ID for trying the behavior again without clearing the app's TipKit datastore.
 
 ## LiquidGlassText

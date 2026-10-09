@@ -55,8 +55,10 @@ TINYUI_DISABLED_COMPONENT(TinyuiSFSymbolView, TinyuiSFSymbolViewComponentDescrip
 
 #if TINYUI_FEATURE_TIP_KIT
 #import "TinyuiTipPopoverView.h"
+#import "TinyuiTipView.h"
 #else
 TINYUI_DISABLED_COMPONENT(TinyuiTipPopoverView, TinyuiTipPopoverViewComponentDescriptor)
+TINYUI_DISABLED_COMPONENT(TinyuiTipView, TinyuiTipViewComponentDescriptor)
 #endif
 
 #undef TINYUI_DISABLED_COMPONENT
@@ -94,4 +96,9 @@ Class<RCTComponentViewProtocol> TinyuiSFSymbolViewCls(void)
 Class<RCTComponentViewProtocol> TinyuiTipPopoverViewCls(void)
 {
   return TinyuiTipPopoverView.class;
+}
+
+Class<RCTComponentViewProtocol> TinyuiTipViewCls(void)
+{
+  return TinyuiTipView.class;
 }
