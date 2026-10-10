@@ -11,6 +11,7 @@ staying close to native APIs. It uses UIKit by default and SwiftUI where needed.
 | Component                          | What it does                                                   |
 | ---------------------------------- | -------------------------------------------------------------- |
 | [Menu](#menu)                      | Present native menus with actions, submenus, and sections       |
+| [SwipeActions](#swipeactions)      | Reveal native action buttons by swiping React Native rows      |
 | [Popover](#popover)                | Show interactive React Native content in a native popover      |
 | [TipKit](#tipkit)                  | Present contextual tips using Apple's TipKit framework         |
 | [LiquidGlassText](#liquidglasstext) | Render text with native glass effects inside the glyphs        |
@@ -75,6 +76,7 @@ use in your app's `package.json`:
 Available components:
 
 - `Menu`
+- `SwipeActions`
 - `Popover`
 - `LiquidGlassText`
 - `Stepper`
@@ -107,6 +109,7 @@ Component-specific JavaScript entry points are also available:
 
 ```tsx
 import { Menu } from 'react-native-tinyui/menu';
+import { SwipeActions } from 'react-native-tinyui/swipe-actions';
 import { Popover } from 'react-native-tinyui/popover';
 import { LiquidGlassText } from 'react-native-tinyui/liquid-glass-text';
 import { Stepper } from 'react-native-tinyui/stepper';
@@ -220,6 +223,62 @@ semantic iOS colors. UIKit doesn't expose custom menu title colors, so the
 deprecated `titleColor` field is retained only for source compatibility; use
 `destructive` for system red styling. Submenus support the same label fields
 plus `destructive`, `disabled`, `hidden`, and `displayInline`.
+
+## SwipeActions
+
+`SwipeActions` wraps React Native row content in a native, non-scrolling
+`UITableView` row and uses `UISwipeActionsConfiguration`. It provides the edge
+and full-swipe behavior of SwiftUI's
+[`swipeActions`](https://developer.apple.com/documentation/swiftui/view/swipeactions(edge:allowsfullswipe:content:))
+without requiring a SwiftUI `List`. Use it inside a `FlatList` or `ScrollView`;
+Yoga measures the children, so a fixed row height is optional.
+
+```tsx
+import { SwipeActions } from 'react-native-tinyui/swipe-actions';
+
+<SwipeActions
+  edge="trailing"
+  allowsFullSwipe={false}
+  contentContainerStyle={{ backgroundColor: 'white', borderRadius: 12 }}
+  actions={[
+    { id: 'archive', title: 'Archive', systemImage: 'archivebox', tintColor: '#007AFF' },
+    { id: 'delete', title: 'Delete', systemImage: 'trash', destructive: true },
+  ]}
+  onActionPress={({ nativeEvent }) => handleAction(nativeEvent.id)}
+>
+  <Pressable onPress={openMessage} style={{ padding: 16 }}>
+    <Text>Weekend plans</Text>
+  </Pressable>
+</SwipeActions>;
+```
+
+| Prop | Description | Default |
+| --- | --- | --- |
+| `actions` | Ordered array of native buttons; an empty array disables swiping | Required |
+| `edge` | `leading` or `trailing`, following the row's layout direction | `trailing` |
+| `allowsFullSwipe` | A full swipe performs the **first** action | `true` |
+| `disabled` | Disables swipe actions while preserving child interactions | `false` |
+| `onActionPress` | Receives `{ nativeEvent: { id, title } }` | — |
+| `children` | React Native row content, including pressable children | Required |
+| `contentContainerStyle` | Styles the moving row, including its background, corners and padding | — |
+
+Each action accepts `title`, optional `id` (defaults to `item.<index>`),
+`systemImage` (SF Symbol), `tintColor` (button background), and `destructive`.
+IDs must be unique within the row; use explicit IDs when reordering actions.
+Colors support `PlatformColor` and `DynamicColorIOS`. Buttons appear from the
+selected edge inward in array order. `destructive` changes the native appearance;
+your callback decides whether to remove the row from React state.
+
+Standard `ViewProps` and a native view ref are supported. `style` applies to the
+stationary outer container; use it for layout, sizing and margins. Put the row's
+background, corners and padding in `contentContainerStyle` (or on your children)
+so they move with the content. A background on `style` stays behind the revealed
+actions. Keep stable list keys.
+Opening another `SwipeActions` row closes the previous one. Updating the action
+configuration, disabling, resizing or unmounting a row dismisses its actions.
+One edge is supported per wrapper; do not nest wrappers to add a second edge.
+This component hosts one native table per mounted row, so use list virtualization
+for large datasets. It does not expose SwiftUI's arbitrary action view content.
 
 ## Popover
 
@@ -744,7 +803,7 @@ visibility state changes apply instantly. Set it to `false` to opt out.
 
 ## Example App
 
-The [example app](example/src/App.tsx) demonstrates Menu, Popover, TipKit,
+The [example app](example/src/App.tsx) demonstrates Menu, SwipeActions, Popover, TipKit,
 LiquidGlassText, Stepper, ConcentricView, and SFSymbol. It includes all native
 components, so building it requires Xcode 26+. Use iOS 26+ to try the glass effects
 and the latest SF Symbol features.

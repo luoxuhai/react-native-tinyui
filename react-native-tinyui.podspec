@@ -4,6 +4,11 @@ require "pathname"
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 
 components = {
+  "SwipeActions" => {
+    :source_files => "ios/SwipeActions/**/*.{h,m,mm,swift,cpp}",
+    :definition => "TINYUI_FEATURE_SWIPE_ACTIONS=1",
+    :frameworks => ["UIKit"],
+  },
   "Menu" => {
     :source_files => "ios/Menu/**/*.{h,m,mm,swift,cpp}",
     :definition => "TINYUI_FEATURE_MENU=1",
@@ -100,7 +105,7 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/luoxuhai/react-native-tinyui.git", :tag => "#{s.version}" }
 
   s.source_files = source_files
-  s.private_header_files = ["ios/Core/**/*.h", "ios/Menu/**/*.h", "ios/Popover/**/*.h", "ios/LiquidGlassText/**/*.h", "ios/Stepper/**/*.h", "ios/ConcentricView/**/*.h", "ios/SFSymbol/**/*.h", "ios/TipKit/**/*.h"]
+  s.private_header_files = ["ios/Core/**/*.h", "ios/Menu/**/*.h", "ios/SwipeActions/**/*.h", "ios/Popover/**/*.h", "ios/LiquidGlassText/**/*.h", "ios/Stepper/**/*.h", "ios/ConcentricView/**/*.h", "ios/SFSymbol/**/*.h", "ios/TipKit/**/*.h"]
   s.preserve_paths = "ios/LiquidGlassText/GlassText-LICENSE"
   s.swift_version = "5.0"
   s.frameworks = frameworks unless frameworks.empty?

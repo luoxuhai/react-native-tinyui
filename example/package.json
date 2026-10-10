@@ -5,6 +5,7 @@
   "react-native-tinyui": {
     "components": [
       "Menu",
+      "SwipeActions",
       "Popover",
       "LiquidGlassText",
       "Stepper",

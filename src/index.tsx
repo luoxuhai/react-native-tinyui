@@ -1,4 +1,11 @@
 export { Menu } from './Menu';
+export { SwipeActions } from './SwipeActions';
+export type {
+  SwipeAction,
+  SwipeActionPressEvent,
+  SwipeActionsEdge,
+  SwipeActionsProps,
+} from './SwipeActions';
 export { TipKit } from './TipKit';
 export type {
   TipAction,

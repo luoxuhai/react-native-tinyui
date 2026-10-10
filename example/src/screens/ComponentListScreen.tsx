@@ -14,6 +14,12 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Components'>;
 
 const components = [
   {
+    description: 'Native row actions with leading, trailing and full swipes.',
+    glyph: '↔',
+    route: 'SwipeActions',
+    title: 'Swipe Actions',
+  },
+  {
     description:
       'Contextual tips with native eligibility and persistent history.',
     glyph: '✦',

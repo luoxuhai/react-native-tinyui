@@ -1,7 +1,7 @@
 {
   "name": "react-native-tinyui",
   "version": "3.0.0",
-  "description": "Dependency-free native iOS Menu, Popover, TipKit, Stepper, ConcentricView, SFSymbol and LiquidGlassText components for React Native",
+  "description": "Dependency-free native iOS Menu, SwipeActions, Popover, TipKit, Stepper, ConcentricView, SFSymbol and LiquidGlassText components for React Native",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
@@ -19,6 +19,11 @@
       "react-native-tinyui-source": "./src/Popover/index.tsx",
       "types": "./lib/typescript/src/Popover/index.d.ts",
       "default": "./lib/module/Popover/index.js"
+    },
+    "./swipe-actions": {
+      "react-native-tinyui-source": "./src/SwipeActions/index.tsx",
+      "types": "./lib/typescript/src/SwipeActions/index.d.ts",
+      "default": "./lib/module/SwipeActions/index.js"
     },
     "./stepper": {
       "react-native-tinyui-source": "./src/Stepper/index.tsx",
@@ -152,6 +157,9 @@
         }
       },
       "components": {
+        "TinyuiSwipeActionsView": {
+          "className": "TinyuiSwipeActionsView"
+        },
         "TinyuiMenuView": {
           "className": "TinyuiMenuView"
         },

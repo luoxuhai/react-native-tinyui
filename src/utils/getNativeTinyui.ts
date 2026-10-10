@@ -2,6 +2,7 @@ import NativeTinyui, { type Spec } from '../NativeTinyui';
 
 export type TinyuiComponent =
   | 'Menu'
+  | 'SwipeActions'
   | 'Popover'
   | 'LiquidGlassText'
   | 'Stepper'

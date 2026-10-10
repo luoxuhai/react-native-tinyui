@@ -7,6 +7,7 @@ import { ComponentListScreen } from './screens/ComponentListScreen';
 import { ConcentricViewScreen } from './screens/ConcentricViewScreen';
 import { LiquidGlassTextScreen } from './screens/LiquidGlassTextScreen';
 import { MenuScreen } from './screens/MenuScreen';
+import { SwipeActionsScreen } from './screens/SwipeActionsScreen';
 import { PopoverScreen } from './screens/PopoverScreen';
 import { StepperScreen } from './screens/StepperScreen';
 import { SFSymbolScreen } from './screens/SFSymbolScreen';
@@ -30,6 +31,11 @@ export default function App() {
             options={{ title: 'TinyUI' }}
           />
           <Stack.Screen component={MenuScreen} name="Menu" />
+          <Stack.Screen
+            component={SwipeActionsScreen}
+            name="SwipeActions"
+            options={{ title: 'Swipe Actions' }}
+          />
           <Stack.Screen component={PopoverScreen} name="Popover" />
           <Stack.Screen
             component={TipKitScreen}

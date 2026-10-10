@@ -12,6 +12,9 @@
 #if TINYUI_FEATURE_MENU
   [components addObject:@"Menu"];
 #endif
+#if TINYUI_FEATURE_SWIPE_ACTIONS
+  [components addObject:@"SwipeActions"];
+#endif
 #if TINYUI_FEATURE_POPOVER
   [components addObject:@"Popover"];
 #endif

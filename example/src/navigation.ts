@@ -1,6 +1,7 @@
 export type RootStackParamList = {
   Components: undefined;
   Menu: undefined;
+  SwipeActions: undefined;
   Popover: undefined;
   TipKit: undefined;
   Stepper: undefined;

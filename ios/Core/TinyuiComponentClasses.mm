@@ -29,6 +29,12 @@ TINYUI_DISABLED_COMPONENT(TinyuiMenuView, TinyuiMenuViewComponentDescriptor)
 TINYUI_DISABLED_COMPONENT(TinyuiPopoverView, TinyuiPopoverViewComponentDescriptor)
 #endif
 
+#if TINYUI_FEATURE_SWIPE_ACTIONS
+#import "TinyuiSwipeActionsView.h"
+#else
+TINYUI_DISABLED_COMPONENT(TinyuiSwipeActionsView, TinyuiSwipeActionsViewComponentDescriptor)
+#endif
+
 #if TINYUI_FEATURE_LIQUID_GLASS_TEXT
 #import "TinyuiLiquidGlassTextView.h"
 #else
@@ -66,6 +72,11 @@ TINYUI_DISABLED_COMPONENT(TinyuiTipView, TinyuiTipViewComponentDescriptor)
 Class<RCTComponentViewProtocol> TinyuiMenuViewCls(void)
 {
   return TinyuiMenuView.class;
+}
+
+Class<RCTComponentViewProtocol> TinyuiSwipeActionsViewCls(void)
+{
+  return TinyuiSwipeActionsView.class;
 }
 
 Class<RCTComponentViewProtocol> TinyuiPopoverViewCls(void)
