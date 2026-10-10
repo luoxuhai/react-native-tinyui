@@ -21,6 +21,12 @@ export interface NativeTipViewProps extends ViewProps {
   onTipError?: DirectEventHandler<
     Readonly<{ tipId: string; code: string; message: string }>
   >;
+  onTipInvalidated?: DirectEventHandler<
+    Readonly<{
+      tipId: string;
+      reason: string;
+    }>
+  >;
 }
 
 export default codegenNativeComponent<NativeTipViewProps>('TinyuiTipView', {

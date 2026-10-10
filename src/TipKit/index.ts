@@ -3,8 +3,10 @@ import type { TipInvalidationReason, TipKitConfiguration } from './types';
 import { validateTipId } from './validation';
 import { Popover } from './Popover';
 import { View } from './View';
+import { Group } from './Group';
 
 export const TipKit = {
+  Group,
   Popover,
   View,
   /**
@@ -53,6 +55,8 @@ export type {
   TipDisplayFrequency,
   TipError,
   TipInvalidationReason,
+  TipInvalidationEvent,
+  TipGroupProps,
   TipKitConfiguration,
   TipPopoverProps,
   TipViewProps,

@@ -4,6 +4,7 @@ import UIKit
 @objc public protocol TinyuiTipPopoverDelegate: AnyObject {
   func onTipAction(tipId: String, id: String, title: String)
   func onTipError(tipId: String, code: String, message: String)
+  func onTipInvalidated(tipId: String, reason: String)
 }
 
 @MainActor
@@ -26,6 +27,8 @@ import UIKit
   private var presentedTipId: String?
   private var isPresenting = false
   private var isDismissing = false
+  private var invalidateOnOutsideDismiss = false
+  private var pendingInvalidation: (tipId: String, reason: String)?
 
   @objc public convenience init(delegate: TinyuiTipPopoverDelegate) {
     self.init(frame: .zero)
@@ -34,6 +37,7 @@ import UIKit
 
   @objc public func configure(_ configuration: [String: Any], enabled: Bool, arrowEdge: String) {
     let nextTip = TinyuiTip(configuration: configuration)
+    if tip?.id != nextTip.id { pendingInvalidation = nil }
     if tip?.id != nextTip.id || self.enabled != enabled {
       stop()
       lastError = nil
@@ -41,6 +45,7 @@ import UIKit
     tip = nextTip
     self.enabled = enabled
     self.arrowEdge = arrowEdge
+    invalidateOnOutsideDismiss = configuration["invalidateOnOutsideDismiss"] as? Bool ?? false
     // Validate changed options even when an observation is already running.
     do {
       try TinyuiTipsRuntime.shared.remember(nextTip)
@@ -87,10 +92,16 @@ import UIKit
     }
 
     observation = Task { @MainActor [weak self] in
-      for await shouldDisplay in tip.shouldDisplayUpdates {
+      var reportedInvalidation = false
+      for await status in tip.statusUpdates {
         guard !Task.isCancelled, let self else { break }
-        self.shouldDisplay = shouldDisplay
+        if case .available = status { self.shouldDisplay = true } else { self.shouldDisplay = false }
+        if case .invalidated(let reason) = status, !reportedInvalidation {
+          reportedInvalidation = true
+          self.pendingInvalidation = (tip.id, TinyuiTipsRuntime.invalidationReason(reason))
+        }
         self.updatePresentation()
+        self.reportInvalidationIfDismissed()
       }
     }
   }
@@ -178,11 +189,25 @@ import UIKit
     presentedTipId = nil
     isPresenting = false
     isDismissing = false
+    reportInvalidationIfDismissed()
+  }
+
+  private func reportInvalidationIfDismissed() {
+    // The next grouped anchor must not present until this transition finishes.
+    guard controller == nil, let event = pendingInvalidation else { return }
+    pendingInvalidation = nil
+    delegate?.onTipInvalidated(tipId: event.tipId, reason: event.reason)
   }
 
   public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
     guard let controller, presentationController.presentedViewController === controller else { return }
+    let dismissedTip = presentedTipId == tip?.id ? tip : nil
+    let shouldInvalidate = invalidateOnOutsideDismiss && !isDismissing
     finishDismissal(controller)
+    // Programmatic hiding, navigation and recycling do not complete a tip.
+    if shouldInvalidate, let dismissedTip, case .available = dismissedTip.status {
+      dismissedTip.invalidate(reason: .tipClosed)
+    }
   }
 
   public func adaptivePresentationStyle(for controller: UIPresentationController) -> UIModalPresentationStyle { .none }
@@ -199,6 +224,8 @@ import UIKit
     enabled = false
     tip = nil
     lastError = nil
+    pendingInvalidation = nil
+    invalidateOnOutsideDismiss = false
     stop()
     parentViewController = nil
   }

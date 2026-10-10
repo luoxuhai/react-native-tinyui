@@ -3,8 +3,9 @@ import type { View as ReactNativeView } from 'react-native';
 
 import { assertComponentEnabled } from '../utils';
 import NativeTipView from './TipViewNativeComponent';
-import type { TipViewProps } from './types';
+import type { TipViewProps, TipInvalidationEvent } from './types';
 import { validateTip } from './validation';
+import { useTipGroup } from './Group';
 
 export const View = forwardRef<
   ComponentRef<typeof ReactNativeView>,
@@ -12,6 +13,7 @@ export const View = forwardRef<
 >(function TipViewRoot(props, ref) {
   assertComponentEnabled('TipKit');
   validateTip(props, 'TipKit.View');
+  const group = useTipGroup(props.tipId);
   const {
     tipId,
     title,
@@ -23,6 +25,7 @@ export const View = forwardRef<
     ignoresDisplayFrequency = false,
     arrowEdge = 'none',
     onActionPress,
+    onInvalidated,
     onError,
     ...viewProps
   } = props;
@@ -38,7 +41,9 @@ export const View = forwardRef<
       message={message}
       systemImage={systemImage}
       actions={actions}
-      enabled={enabled}
+      enabled={
+        enabled && (!group || (group.enabled && group.currentTipId === tipId))
+      }
       maxDisplayCount={maxDisplayCount ?? 0}
       ignoresDisplayFrequency={ignoresDisplayFrequency}
       arrowEdge={arrowEdge}
@@ -46,6 +51,13 @@ export const View = forwardRef<
         if (nativeEvent.tipId === tipId) {
           onActionPress?.({ id: nativeEvent.id, title: nativeEvent.title });
         }
+      }}
+      onTipInvalidated={({ nativeEvent }) => {
+        if (nativeEvent.tipId !== tipId) return;
+        group?.complete(tipId);
+        onInvalidated?.({
+          reason: nativeEvent.reason as TipInvalidationEvent['reason'],
+        });
       }}
       onTipError={({ nativeEvent }) => {
         if (nativeEvent.tipId !== tipId) return;

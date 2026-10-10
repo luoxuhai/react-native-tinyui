@@ -12,6 +12,8 @@ export type {
   TipDisplayFrequency,
   TipError,
   TipInvalidationReason,
+  TipInvalidationEvent,
+  TipGroupProps,
   TipPopoverProps,
   TipViewProps,
   TipKitConfiguration,

@@ -65,6 +65,7 @@ using namespace facebook::react;
     @"actions": actions,
     @"maxDisplayCount": @(next.maxDisplayCount),
     @"ignoresDisplayFrequency": @(next.ignoresDisplayFrequency),
+    @"invalidateOnOutsideDismiss": @(next.invalidateOnOutsideDismiss),
   } enabled:next.enabled arrowEdge:RCTNSStringFromString(next.arrowEdge)];
   [super updateProps:props oldProps:oldProps];
 }
@@ -84,6 +85,15 @@ using namespace facebook::react;
   std::static_pointer_cast<const TinyuiTipPopoverViewEventEmitter>(_eventEmitter)->onTipError({
     .tipId = std::string(tipId.UTF8String ?: ""),
     .code = std::string(code.UTF8String ?: ""), .message = std::string(message.UTF8String ?: ""),
+  });
+}
+
+- (void)onTipInvalidatedWithTipId:(NSString *)tipId reason:(NSString *)reason
+{
+  if (_eventEmitter == nullptr) return;
+  std::static_pointer_cast<const TinyuiTipPopoverViewEventEmitter>(_eventEmitter)->onTipInvalidated({
+    .tipId = std::string(tipId.UTF8String ?: ""),
+    .reason = std::string(reason.UTF8String ?: "unknown"),
   });
 }
 

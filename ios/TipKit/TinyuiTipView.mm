@@ -83,6 +83,15 @@ using namespace facebook::react;
   });
 }
 
+- (void)onTipInvalidatedWithTipId:(NSString *)tipId reason:(NSString *)reason
+{
+  if (_eventEmitter == nullptr) return;
+  std::static_pointer_cast<const TinyuiTipViewEventEmitter>(_eventEmitter)->onTipInvalidated({
+    .tipId = std::string(tipId.UTF8String ?: ""),
+    .reason = std::string(reason.UTF8String ?: "unknown"),
+  });
+}
+
 - (void)prepareForRecycle
 {
   _state.reset();

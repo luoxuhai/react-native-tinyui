@@ -80,6 +80,18 @@ import Foundation
     ])
   }
 
+  static func invalidationReason(_ reason: Tips.InvalidationReason) -> String {
+    if #available(iOS 18.0, *), reason == .displayDurationExceeded {
+      return "displayDurationExceeded"
+    }
+    switch reason {
+    case .actionPerformed: return "actionPerformed"
+    case .tipClosed: return "tipClosed"
+    case .displayCountExceeded: return "displayCountExceeded"
+    default: return "unknown"
+    }
+  }
+
   func remember(_ tip: TinyuiTip) throws {
     if let previous = knownTips[tip.id],
        previous.maximumDisplayCount != tip.maximumDisplayCount || previous.ignoresFrequency != tip.ignoresFrequency {

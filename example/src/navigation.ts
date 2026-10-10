@@ -4,6 +4,7 @@ export type RootStackParamList = {
   SwipeActions: undefined;
   Popover: undefined;
   TipKit: undefined;
+  TipKitGroup: undefined;
   Stepper: undefined;
   ConcentricView: undefined;
   SFSymbol: undefined;

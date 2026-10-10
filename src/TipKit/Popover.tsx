@@ -3,13 +3,15 @@ import { View } from 'react-native';
 
 import { assertComponentEnabled } from '../utils';
 import NativeTipPopoverView from './TipPopoverNativeComponent';
-import type { TipPopoverProps } from './types';
+import type { TipPopoverProps, TipInvalidationEvent } from './types';
 import { validateTip } from './validation';
+import { useTipGroup } from './Group';
 
 export const Popover = forwardRef<ComponentRef<typeof View>, TipPopoverProps>(
   function TipPopoverRoot(props, ref) {
     assertComponentEnabled('TipKit');
     validateTip(props);
+    const group = useTipGroup(props.tipId);
     const {
       children,
       tipId,
@@ -22,6 +24,8 @@ export const Popover = forwardRef<ComponentRef<typeof View>, TipPopoverProps>(
       ignoresDisplayFrequency = false,
       arrowEdge = 'auto',
       onActionPress,
+      onInvalidated,
+      invalidateOnOutsideDismiss = group?.invalidateOnOutsideDismiss ?? false,
       onError,
       ...viewProps
     } = props;
@@ -36,7 +40,10 @@ export const Popover = forwardRef<ComponentRef<typeof View>, TipPopoverProps>(
         message={message}
         systemImage={systemImage}
         actions={actions}
-        enabled={enabled}
+        enabled={
+          enabled && (!group || (group.enabled && group.currentTipId === tipId))
+        }
+        invalidateOnOutsideDismiss={invalidateOnOutsideDismiss}
         maxDisplayCount={maxDisplayCount ?? 0}
         ignoresDisplayFrequency={ignoresDisplayFrequency}
         arrowEdge={arrowEdge}
@@ -44,6 +51,13 @@ export const Popover = forwardRef<ComponentRef<typeof View>, TipPopoverProps>(
           if (nativeEvent.tipId === tipId) {
             onActionPress?.({ id: nativeEvent.id, title: nativeEvent.title });
           }
+        }}
+        onTipInvalidated={({ nativeEvent }) => {
+          if (nativeEvent.tipId !== tipId) return;
+          group?.complete(tipId);
+          onInvalidated?.({
+            reason: nativeEvent.reason as TipInvalidationEvent['reason'],
+          });
         }}
         onTipError={({ nativeEvent }) => {
           if (nativeEvent.tipId !== tipId) return;

@@ -12,6 +12,7 @@ export interface NativeTipPopoverProps extends ViewProps {
   systemImage?: string;
   actions?: ReadonlyArray<Readonly<{ id: string; title: string }>>;
   enabled?: boolean;
+  invalidateOnOutsideDismiss?: boolean;
   maxDisplayCount?: CodegenTypes.Int32;
   ignoresDisplayFrequency?: boolean;
   arrowEdge?: string;
@@ -20,6 +21,12 @@ export interface NativeTipPopoverProps extends ViewProps {
   >;
   onTipError?: DirectEventHandler<
     Readonly<{ tipId: string; code: string; message: string }>
+  >;
+  onTipInvalidated?: DirectEventHandler<
+    Readonly<{
+      tipId: string;
+      reason: string;
+    }>
   >;
 }
 

@@ -27,6 +27,12 @@ const components = [
     title: 'TipKit',
   },
   {
+    description: 'Discover features one at a time with ordered tips.',
+    glyph: '✦',
+    route: 'TipKitGroup',
+    title: 'Ordered tips',
+  },
+  {
     description: 'SF Symbols, native animations, rendering and transitions.',
     glyph: '􀆿',
     route: 'SFSymbol',

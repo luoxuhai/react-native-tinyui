@@ -82,7 +82,7 @@ Available components:
 - `Stepper`
 - `ConcentricView`
 - `SFSymbol`
-- `TipKit` (enables `TipKit.View`, `TipKit.Popover`, `TipKit.configure`, `TipKit.resetDatastore` and `TipKit.invalidate`)
+- `TipKit` (enables `TipKit.Group`, `TipKit.View`, `TipKit.Popover`, `TipKit.configure`, `TipKit.resetDatastore` and `TipKit.invalidate`)
 
 `TipKit` is one optional module containing both native views,
 `TinyuiTipPopoverView` and `TinyuiTipView`. Select it once in your app's
@@ -431,7 +431,76 @@ The remaining props are shared by both components:
 | `ignoresDisplayFrequency` | Exempts this tip from the app-wide display interval | `false` |
 | `arrowEdge` | `top`, `bottom`, `leading`, `trailing`; Popover also accepts `auto`, View accepts `none` | Popover: `auto`; View: `none` |
 | `onActionPress` | Receives the selected `{ id, title }`; does not automatically invalidate | — |
+| `onInvalidated` | Receives `{ reason }` when invalidated, including persisted invalidation on mount; Popover waits until dismissal finishes | — |
 | `onError` | Receives `{ code, message }`; otherwise a warning is logged | — |
+
+`TipKit.Popover` also accepts `invalidateOnOutsideDismiss`. It defaults to
+`false`, or inherits its Group's value. When enabled, tapping outside the bubble
+invalidates the tip with `tipClosed`. Programmatic hiding, disabling, unmounting
+and leaving the screen do not themselves invalidate it.
+
+### Ordered groups
+
+`TipKit.Group` presents tips in the explicit `tipIds` order. It is a React
+coordinator available on **iOS 17+**, backed by native TipKit eligibility and
+persisted invalidation; it does not wrap Apple's iOS 18 `TipGroup` API.
+`priority` currently supports only `ordered` and defaults to it. The Group adds
+no layout view, so its tips can be nested in ordinary layout components.
+
+```tsx
+// At app startup, before mounting tips:
+await TipKit.configure({ displayFrequency: 'immediate' });
+
+// In your screen:
+<TipKit.Group
+  priority="ordered"
+  tipIds={['favorite-v1', 'share-v1']}
+  enabled={isScreenFocused}
+  invalidateOnOutsideDismiss
+>
+  <TipKit.Popover tipId="favorite-v1" title="Save your favorites">
+    <Button
+      title="Favorite"
+      onPress={async () => {
+        await TipKit.invalidate('favorite-v1', 'actionPerformed');
+        saveFavorite();
+      }}
+    />
+  </TipKit.Popover>
+  <TipKit.Popover tipId="share-v1" title="Share with a friend">
+    <Button
+      title="Share"
+      onPress={async () => {
+        await TipKit.invalidate('share-v1', 'actionPerformed');
+        shareItem();
+      }}
+    />
+  </TipKit.Popover>
+</TipKit.Group>;
+```
+
+- The system close button, `TipKit.invalidate`, or native display limits complete
+  a step. The next tip is enabled after the preceding popover has finished
+  dismissing. Action buttons still require explicit invalidation.
+- Outside dismissal does **not** complete a step by default. Opt in with
+  `invalidateOnOutsideDismiss`, either on the Group or an individual Popover.
+  An explicit Popover value overrides the Group's value.
+- Already-invalidated tips are skipped when the group mounts again. Keep IDs
+  stable across launches. Progress is driven by native state, not JS storage.
+- The next tip still obeys native eligibility and display frequency. Use
+  `immediate` at startup for consecutive tips; TinyUI otherwise defaults to
+  `daily`.
+- Use each declared ID for one `TipKit.View` or `TipKit.Popover` in the group.
+  A missing, disabled or ineligible current tip blocks later tips. Keep the
+  current tip mounted and enabled until it reports invalidation; invalidate it
+  instead of immediately disabling it when its feature is used.
+- `enabled={false}` pauses the group without completing a step. Groups are
+  independent; this is not a global queue for other tips, sheets or screens.
+
+`onInvalidated` reports `actionPerformed`, `tipClosed`, `displayCountExceeded`,
+`displayDurationExceeded`, or `unknown` for an unrecognized native reason.
+It is a state notification, not an outside-dismiss callback, and can fire again
+when an already-invalidated tip resumes observation.
 
 Both components accept standard `ViewProps` and a native view ref. For Popover,
 `style` lays out the anchor, not the bubble. UIKit chooses the bubble's size and may adapt
@@ -481,8 +550,9 @@ launch will erase users' tip history on every launch.
 requires configuration first. It persistently invalidates the ID even when no
 view for that tip is mounted. `reason` may be `actionPerformed` or `tipClosed`.
 
-Both native views observe TipKit's `shouldDisplayUpdates` to show or remove
-the tip. Eligibility and visibility changes are not sent to JavaScript.
+Both native views observe TipKit's `statusUpdates` to show or remove
+the tip. Invalidation is sent to JavaScript through `onInvalidated`; other
+eligibility and visibility changes are not sent to JavaScript.
 Call `invalidate` with `actionPerformed` after the feature is used, or with
 `tipClosed` to permanently dismiss the tip. TipKit also handles the system
 close button and display limits.
@@ -496,7 +566,7 @@ with the same ID share their TipKit history. Keep `maxDisplayCount` and
 tip. Hiding a tip, unmounting it or reconfiguring TinyUI never resets history.
 
 Use `enabled={isScreenFocused && businessCondition}` with your navigation
-library. Each mounted, enabled Popover anchor starts its own `shouldDisplayUpdates`
+library. Each mounted, enabled Popover anchor starts its own `statusUpdates`
 observation once it has a size and a parent view controller. Disabling,
 detaching or recycling the component stops observation and dismisses its
 bubble; changing `tipId` starts a new observation. This follows the independent
@@ -517,7 +587,8 @@ detached or recycled. They do not present a view controller or block interaction
 with the rest of the screen. Both presentations use the same datastore; an
 invalidation affects every instance of the same `tipId`.
 
-Native rule/event builders and TipGroup are not exposed. The example's
+Native rule/event builders and Apple's TipGroup are not exposed. Use the
+React `TipKit.Group` above for ordered presentation. The example's
 **Inline view** switch toggles between both presentations. Its **New demo tip**
 button deliberately creates another
 ID for trying the behavior again without clearing the app's TipKit datastore.

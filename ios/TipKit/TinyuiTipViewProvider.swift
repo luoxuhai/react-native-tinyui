@@ -5,6 +5,7 @@ import UIKit
 @objc public protocol TinyuiTipViewDelegate: AnyObject {
   func onTipAction(tipId: String, id: String, title: String)
   func onTipError(tipId: String, code: String, message: String)
+  func onTipInvalidated(tipId: String, reason: String)
   // Fabric consumes this size directly; it is not a JavaScript event.
   func onTipSizeChange(tipId: String, width: CGFloat, height: CGFloat)
 }
@@ -69,9 +70,14 @@ import UIKit
       return
     }
     observation = Task { @MainActor [weak self] in
-      for await shouldDisplay in tip.shouldDisplayUpdates {
+      var reportedInvalidation = false
+      for await status in tip.statusUpdates {
         guard !Task.isCancelled, let self else { break }
-        if shouldDisplay { self.showTip() } else { self.removeTip() }
+        if case .available = status { self.showTip() } else { self.removeTip() }
+        if case .invalidated(let reason) = status, !reportedInvalidation {
+          reportedInvalidation = true
+          self.delegate?.onTipInvalidated(tipId: tip.id, reason: TinyuiTipsRuntime.invalidationReason(reason))
+        }
       }
     }
   }
