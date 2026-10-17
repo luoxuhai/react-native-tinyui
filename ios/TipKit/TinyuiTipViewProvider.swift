@@ -15,9 +15,14 @@ import UIKit
   private weak var delegate: TinyuiTipViewDelegate?
   private var tip: TinyuiTip?
   private var enabled = false
+  private let styleOptions = TinyuiTipStyleOptions()
   private var arrowEdge: Edge?
   private var observation: Task<Void, Never>?
   private var tipView: TipUIView?
+  private var preferredTipWidth: CGFloat = 0
+  private var measuredTipWidth: CGFloat?
+  private var tipWidthConstraint: NSLayoutConstraint?
+  private var tipHeightConstraint: NSLayoutConstraint?
   private var lastError: String?
 
   @objc public convenience init(delegate: TinyuiTipViewDelegate) {
@@ -25,6 +30,7 @@ import UIKit
     self.delegate = delegate
     clipsToBounds = true
     registerForTraitChanges([UITraitPreferredContentSizeCategory.self]) { (view: TinyuiTipViewProvider, _: UITraitCollection) in
+      view.measuredTipWidth = nil
       view.setNeedsLayout()
     }
   }
@@ -37,6 +43,12 @@ import UIKit
     }
     tip = nextTip
     self.enabled = enabled
+    let nextShowsCloseButton = configuration["showsCloseButton"] as? Bool ?? true
+    if styleOptions.showsCloseButton != nextShowsCloseButton {
+      styleOptions.showsCloseButton = nextShowsCloseButton
+      measuredTipWidth = nil
+      setNeedsLayout()
+    }
     switch arrowEdge {
     case "top": self.arrowEdge = .top
     case "bottom": self.arrowEdge = .bottom
@@ -90,13 +102,32 @@ import UIKit
       self.delegate?.onTipAction(tipId: tip.id, id: content.id, title: content.title)
     }
     tipView = view
+    preferredTipWidth = view.intrinsicContentSize.width
+    measuredTipWidth = nil
+    updateStyleWidth()
+    view.viewStyle = TinyuiTipContentStyle(options: styleOptions)
+    view.translatesAutoresizingMaskIntoConstraints = false
     addSubview(view)
+    let widthConstraint = view.widthAnchor.constraint(equalToConstant: 0)
+    let heightConstraint = view.heightAnchor.constraint(equalToConstant: 0)
+    tipWidthConstraint = widthConstraint
+    tipHeightConstraint = heightConstraint
+    NSLayoutConstraint.activate([
+      view.topAnchor.constraint(equalTo: topAnchor),
+      view.leadingAnchor.constraint(equalTo: leadingAnchor),
+      widthConstraint,
+      heightConstraint,
+    ])
     setNeedsLayout()
   }
 
   private func removeTip() {
     tipView?.removeFromSuperview()
     tipView = nil
+    preferredTipWidth = 0
+    measuredTipWidth = nil
+    tipWidthConstraint = nil
+    tipHeightConstraint = nil
     reportSize(height: 0)
   }
 
@@ -109,19 +140,40 @@ import UIKit
   override public func layoutSubviews() {
     super.layoutSubviews()
     guard let tipView else { reportSize(height: 0); return }
-    guard bounds.width > 0 else { return }
+    guard bounds.width > 0,
+          let tipWidthConstraint, let tipHeightConstraint else { return }
+    updateStyleWidth()
     // TipUIView may cap its card width on iPad. Measure and lay it out at the
     // same width so a wider proposal cannot underestimate wrapped text height.
-    let intrinsicSize = tipView.intrinsicContentSize
-    let width = intrinsicSize.width.isFinite && intrinsicSize.width > 0
-      ? min(bounds.width, intrinsicSize.width) : bounds.width
-    let fittingSize = tipView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
-    guard fittingSize.height.isFinite else { return }
-    let scale = traitCollection.displayScale > 0 ? traitCollection.displayScale : 1
-    let height = ceil(max(0, fittingSize.height) * scale) / scale
+    let width = preferredTipWidth.isFinite && preferredTipWidth > 0
+      ? min(bounds.width, preferredTipWidth) : bounds.width
+    if measuredTipWidth != width {
+      // TipUIView's SwiftUI content needs a required width constraint to wrap.
+      // A frame alone can leave the card at its unconstrained intrinsic width.
+      tipWidthConstraint.constant = width
+      tipHeightConstraint.isActive = false
+      defer { tipHeightConstraint.isActive = true }
+      tipView.bounds.size.width = width
+      let fittingSize = tipView.systemLayoutSizeFitting(
+        CGSize(width: width, height: UIView.layoutFittingCompressedSize.height),
+        withHorizontalFittingPriority: .required,
+        verticalFittingPriority: .fittingSizeLevel)
+      guard fittingSize.height.isFinite else { return }
+      let scale = traitCollection.displayScale > 0 ? traitCollection.displayScale : 1
+      tipHeightConstraint.constant = ceil(max(0, fittingSize.height) * scale) / scale
+      measuredTipWidth = width
+    }
+    let height = tipHeightConstraint.constant
     let x = effectiveUserInterfaceLayoutDirection == .rightToLeft ? bounds.width - width : 0
     tipView.frame = CGRect(x: x, y: 0, width: width, height: height)
     reportSize(height: height)
+  }
+
+  private func updateStyleWidth() {
+    // TipUIView's SwiftUI content can keep its ideal width even when its UIKit
+    // frame is narrower. Constrain the style too so text and buttons wrap.
+    let width = bounds.width > 0 ? bounds.width : nil
+    if styleOptions.maximumWidth != width { styleOptions.maximumWidth = width }
   }
 
   private func reportSize(height: CGFloat) {
@@ -138,6 +190,8 @@ import UIKit
     stop()
     tip = nil
     enabled = false
+    styleOptions.showsCloseButton = true
+    styleOptions.maximumWidth = nil
     arrowEdge = nil
     lastError = nil
   }

@@ -26,6 +26,10 @@ export interface TipGroupProps {
   priority?: 'ordered';
   /** Pause all tips in this group without completing them. Defaults to true. */
   enabled?: boolean;
+  /** Show each tip's close button. Defaults to true. */
+  showsCloseButton?: boolean;
+  /** Allow popovers to close when tapping outside. Defaults to true. */
+  dismissOnOutsidePress?: boolean;
   /** Treat tapping outside a popover as completion. Defaults to false. */
   invalidateOnOutsideDismiss?: boolean;
   children: ReactNode;
@@ -49,10 +53,12 @@ export interface TipContentProps extends Omit<ViewProps, 'children'> {
   title: string;
   message?: string;
   systemImage?: string;
-  /** Native action buttons, each with its own id and title; TipKit controls their layout. */
+  /** Native action buttons, each with its own id and title. */
   actions?: readonly TipAction[];
   /** Allows presentation when TipKit is also eligible. Defaults to true. */
   enabled?: boolean;
+  /** Show the close button. Inherits from Group; otherwise true. False uses a custom TipViewStyle. */
+  showsCloseButton?: boolean;
   /** Omit to leave the number of presentations unlimited. */
   maxDisplayCount?: number;
   ignoresDisplayFrequency?: boolean;
@@ -64,6 +70,8 @@ export interface TipContentProps extends Omit<ViewProps, 'children'> {
 }
 
 export interface TipPopoverProps extends TipContentProps {
+  /** Allow outside taps to close the popover. Inherits from Group; otherwise true. */
+  dismissOnOutsidePress?: boolean;
   /** Invalidate on outside dismissal. Inherits from Group; otherwise false. */
   invalidateOnOutsideDismiss?: boolean;
   /** Anchor content. Its existing touch handlers are preserved. */

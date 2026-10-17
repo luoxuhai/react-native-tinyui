@@ -43,6 +43,7 @@ using namespace facebook::react;
     @"message": RCTNSStringFromString(next.message),
     @"systemImage": RCTNSStringFromString(next.systemImage),
     @"actions": actions,
+    @"showsCloseButton": @(next.showsCloseButton),
     @"maxDisplayCount": @(next.maxDisplayCount),
     @"ignoresDisplayFrequency": @(next.ignoresDisplayFrequency),
   } enabled:next.enabled arrowEdge:RCTNSStringFromString(next.arrowEdge)];

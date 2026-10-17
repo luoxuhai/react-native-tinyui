@@ -12,6 +12,7 @@ export interface NativeTipViewProps extends ViewProps {
   systemImage?: string;
   actions?: ReadonlyArray<Readonly<{ id: string; title: string }>>;
   enabled?: boolean;
+  showsCloseButton?: CodegenTypes.WithDefault<boolean, true>;
   maxDisplayCount?: CodegenTypes.Int32;
   ignoresDisplayFrequency?: boolean;
   arrowEdge?: string;

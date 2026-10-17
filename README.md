@@ -407,7 +407,7 @@ startup configuration):
 
 `TipKit.View` fills the available width and measures its native content height.
 The card keeps TipKit's preferred width within that space and aligns to the
-leading edge; the system also chooses the action buttons' layout.
+leading edge; by default, the system also chooses the action buttons' layout.
 Give it a bounded width (for example, a stretched child of a column or an
 explicit `style.width`); no fixed height is needed. When disabled or ineligible,
 its content height becomes zero. Explicit height/min-height, padding, margins
@@ -425,8 +425,9 @@ The remaining props are shared by both components:
 | `title` | Required nonempty title, already localized by the app | — |
 | `message` | Supporting plain text | — |
 | `systemImage` | SF Symbol name | — |
-| `actions` | Native buttons with unique nonempty `id` and nonempty `title`; TipKit chooses their layout | `[]` |
+| `actions` | Native buttons with unique nonempty `id` and nonempty `title` | `[]` |
 | `enabled` | Allows presentation; does not override TipKit eligibility | `true` |
+| `showsCloseButton` | Shows the × button; inherits from Group unless explicitly set on the tip | `true` |
 | `maxDisplayCount` | Positive integer; automatically invalidates after this many displays | Unlimited |
 | `ignoresDisplayFrequency` | Exempts this tip from the app-wide display interval | `false` |
 | `arrowEdge` | `top`, `bottom`, `leading`, `trailing`; Popover also accepts `auto`, View accepts `none` | Popover: `auto`; View: `none` |
@@ -434,10 +435,43 @@ The remaining props are shared by both components:
 | `onInvalidated` | Receives `{ reason }` when invalidated, including persisted invalidation on mount; Popover waits until dismissal finishes | — |
 | `onError` | Receives `{ code, message }`; otherwise a warning is logged | — |
 
-`TipKit.Popover` also accepts `invalidateOnOutsideDismiss`. It defaults to
-`false`, or inherits its Group's value. When enabled, tapping outside the bubble
-invalidates the tip with `tipClosed`. Programmatic hiding, disabling, unmounting
-and leaving the screen do not themselves invalidate it.
+Set `showsCloseButton={false}` on `TipKit.Popover`, `TipKit.View`, or their
+`TipKit.Group` to hide the × button. An explicit value on a tip overrides its
+Group. Changes apply to visible tips without completing them. Hiding the button
+uses a custom native [TipViewStyle](https://developer.apple.com/documentation/tipkit/tipviewstyle),
+with title, message, image and vertically stacked action buttons; its content
+layout differs from the system default. `true` keeps the system style.
+
+`TipKit.Popover` also accepts these outside-tap controls. Each inherits from its
+Group unless explicitly set on the Popover:
+
+| Prop | Description | Default |
+| --- | --- | --- |
+| `dismissOnOutsidePress` | Allows outside taps to close the bubble; set to `false` to keep it open | `true` |
+| `invalidateOnOutsideDismiss` | Marks an outside-dismissed tip as completed with `tipClosed` | `false` |
+
+With `dismissOnOutsidePress={false}`, outside taps neither dismiss nor invalidate
+the tip, even when `invalidateOnOutsideDismiss` is enabled. The × button (when shown),
+`TipKit.invalidate`, disabling and unmounting can still close it. Programmatic
+hiding, disabling, unmounting and leaving the screen do not themselves
+invalidate it. Changes to `dismissOnOutsidePress` also apply to a visible bubble.
+
+```tsx
+<TipKit.Popover
+  tipId="favorite-v1"
+  title="Save your favorites"
+  showsCloseButton={false}
+  dismissOnOutsidePress={false}
+  actions={[{ id: 'done', title: 'Got it' }]}
+  onActionPress={() => TipKit.invalidate('favorite-v1', 'actionPerformed')}
+>
+  <Button title="Favorite" onPress={saveFavorite} />
+</TipKit.Popover>;
+```
+
+With both controls set to `false`, provide an action that calls
+`TipKit.invalidate` to let the user complete the tip. Hiding the close button
+alone does not prevent outside dismissal or change invalidation behavior.
 
 ### Ordered groups
 
@@ -485,6 +519,12 @@ await TipKit.configure({ displayFrequency: 'immediate' });
 - Outside dismissal does **not** complete a step by default. Opt in with
   `invalidateOnOutsideDismiss`, either on the Group or an individual Popover.
   An explicit Popover value overrides the Group's value.
+- To keep tips open when tapping outside, set `dismissOnOutsidePress={false}`
+  on the Group or an individual Popover. An explicit Popover value overrides
+  the Group's value. The × button (when shown) and invalidation still advance the group.
+- Set `showsCloseButton={false}` on the Group to hide the × button on all its
+  tips, or override it on individual `TipKit.Popover` / `TipKit.View` components.
+  This changes presentation only; actions still need explicit invalidation to advance.
 - Already-invalidated tips are skipped when the group mounts again. Keep IDs
   stable across launches. Progress is driven by native state, not JS storage.
 - The next tip still obeys native eligibility and display frequency. Use

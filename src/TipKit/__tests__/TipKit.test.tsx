@@ -61,14 +61,25 @@ describe('TipKit.Popover', () => {
       children: anchor,
     });
     expect(view.props().enabled).toBe(false);
+    expect(view.props().showsCloseButton).toBe(true);
+    expect(view.props().dismissOnOutsidePress).toBe(true);
     const wrapper = view.props().children as ReactElement<{
       children: ReactElement<{ onPress: () => void }>;
     }>;
     expect(wrapper.props.children).toBe(anchor);
     act(() => wrapper.props.children.props.onPress());
     expect(onPress).toHaveBeenCalledTimes(1);
-    view.update({ enabled: true });
+    view.update({
+      enabled: true,
+      showsCloseButton: false,
+      dismissOnOutsidePress: false,
+    });
     expect(view.props().enabled).toBe(true);
+    expect(view.props().showsCloseButton).toBe(false);
+    expect(view.props().dismissOnOutsidePress).toBe(false);
+    view.update({ dismissOnOutsidePress: true });
+    expect(view.props().showsCloseButton).toBe(true);
+    expect(view.props().dismissOnOutsidePress).toBe(true);
     expect(getNativeTinyui).not.toHaveBeenCalled();
     expect(assertComponentEnabled).toHaveBeenCalledWith('TipKit');
   });
@@ -82,6 +93,7 @@ describe('TipKit.Popover', () => {
     const view = render({
       actions,
       onActionPress,
+      showsCloseButton: false,
     });
     expect(view.props().actions).toEqual(actions);
     for (const action of actions) {

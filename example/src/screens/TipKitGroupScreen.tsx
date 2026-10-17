@@ -16,6 +16,8 @@ export function TipKitGroupScreen() {
   const [ready, setReady] = useState(false);
   const [running, setRunning] = useState(false);
   const [outside, setOutside] = useState(false);
+  const [dismissOnOutsidePress, setDismissOnOutsidePress] = useState(true);
+  const [showsCloseButton, setShowsCloseButton] = useState(true);
   const [namespace, setNamespace] = useState('tinyui.example.ordered.v1');
   const [completed, setCompleted] = useState<string[]>([]);
   const [error, setError] = useState('');
@@ -54,6 +56,24 @@ export function TipKitGroupScreen() {
         its feature to continue.
       </Text>
       <View style={styles.row}>
+        <Text style={styles.body}>Show close button</Text>
+        <Switch
+          accessibilityLabel="Show close button"
+          testID="tip-group-close-button"
+          value={showsCloseButton}
+          onValueChange={setShowsCloseButton}
+        />
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.body}>Close when tapping outside</Text>
+        <Switch
+          accessibilityLabel="Close when tapping outside"
+          testID="tip-group-dismiss-outside"
+          value={dismissOnOutsidePress}
+          onValueChange={setDismissOnOutsidePress}
+        />
+      </View>
+      <View style={styles.row}>
         <Text style={styles.body}>Advance when tapping outside</Text>
         <Switch
           accessibilityLabel="Advance when tapping outside"
@@ -73,6 +93,8 @@ export function TipKitGroupScreen() {
           tipIds={tipIds}
           priority="ordered"
           enabled={isFocused && running}
+          showsCloseButton={showsCloseButton}
+          dismissOnOutsidePress={dismissOnOutsidePress}
           invalidateOnOutsideDismiss={outside}
         >
           {tipIds.map((tipId, index) => (

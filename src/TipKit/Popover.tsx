@@ -20,11 +20,13 @@ export const Popover = forwardRef<ComponentRef<typeof View>, TipPopoverProps>(
       systemImage,
       actions,
       enabled = true,
+      showsCloseButton = group?.showsCloseButton ?? true,
       maxDisplayCount,
       ignoresDisplayFrequency = false,
       arrowEdge = 'auto',
       onActionPress,
       onInvalidated,
+      dismissOnOutsidePress = group?.dismissOnOutsidePress ?? true,
       invalidateOnOutsideDismiss = group?.invalidateOnOutsideDismiss ?? false,
       onError,
       ...viewProps
@@ -40,9 +42,11 @@ export const Popover = forwardRef<ComponentRef<typeof View>, TipPopoverProps>(
         message={message}
         systemImage={systemImage}
         actions={actions}
+        showsCloseButton={showsCloseButton}
         enabled={
           enabled && (!group || (group.enabled && group.currentTipId === tipId))
         }
+        dismissOnOutsidePress={dismissOnOutsidePress}
         invalidateOnOutsideDismiss={invalidateOnOutsideDismiss}
         maxDisplayCount={maxDisplayCount ?? 0}
         ignoresDisplayFrequency={ignoresDisplayFrequency}

@@ -63,8 +63,10 @@ using namespace facebook::react;
     @"message": RCTNSStringFromString(next.message),
     @"systemImage": RCTNSStringFromString(next.systemImage),
     @"actions": actions,
+    @"showsCloseButton": @(next.showsCloseButton),
     @"maxDisplayCount": @(next.maxDisplayCount),
     @"ignoresDisplayFrequency": @(next.ignoresDisplayFrequency),
+    @"dismissOnOutsidePress": @(next.dismissOnOutsidePress),
     @"invalidateOnOutsideDismiss": @(next.invalidateOnOutsideDismiss),
   } enabled:next.enabled arrowEdge:RCTNSStringFromString(next.arrowEdge)];
   [super updateProps:props oldProps:oldProps];

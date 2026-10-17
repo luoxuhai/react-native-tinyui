@@ -53,6 +53,7 @@ describe('TipKit.View', () => {
         title: 'Favorite',
         arrowEdge: 'none',
         enabled: true,
+        showsCloseButton: true,
         maxDisplayCount: 0,
         ignoresDisplayFrequency: false,
         collapsable: false,
@@ -63,8 +64,9 @@ describe('TipKit.View', () => {
   });
 
   it('forwards display controls without configuring or invalidating the tip', () => {
-    const view = render({ enabled: false });
+    const view = render({ enabled: false, showsCloseButton: false });
     expect(view.props().enabled).toBe(false);
+    expect(view.props().showsCloseButton).toBe(false);
     view.update({
       enabled: true,
       arrowEdge: 'bottom',
@@ -74,6 +76,7 @@ describe('TipKit.View', () => {
     expect(view.props()).toEqual(
       expect.objectContaining({
         enabled: true,
+        showsCloseButton: true,
         arrowEdge: 'bottom',
         maxDisplayCount: 2,
         ignoresDisplayFrequency: true,
@@ -88,7 +91,7 @@ describe('TipKit.View', () => {
       { id: 'not-now', title: 'Not now' },
     ];
     const onActionPress = jest.fn();
-    const view = render({ actions, onActionPress });
+    const view = render({ actions, onActionPress, showsCloseButton: false });
     expect(view.props().actions).toEqual(actions);
     const press = (tipId: string, action: (typeof actions)[number]) => {
       view.props().onTipAction?.({

@@ -14,6 +14,8 @@ interface GroupContextValue {
   tipIds: ReadonlySet<string>;
   currentTipId: string | undefined;
   enabled: boolean;
+  showsCloseButton: boolean;
+  dismissOnOutsidePress: boolean;
   invalidateOnOutsideDismiss: boolean;
   complete: (tipId: string) => void;
 }
@@ -25,6 +27,8 @@ export function Group({
   tipIds,
   priority = 'ordered',
   enabled = true,
+  showsCloseButton = true,
+  dismissOnOutsidePress = true,
   invalidateOnOutsideDismiss = false,
   children,
 }: TipGroupProps) {
@@ -54,10 +58,20 @@ export function Group({
       tipIds: new Set(tipIds),
       currentTipId: tipIds.find((id) => !completed.has(id)),
       enabled,
+      showsCloseButton,
+      dismissOnOutsidePress,
       invalidateOnOutsideDismiss,
       complete,
     }),
-    [tipIds, completed, enabled, invalidateOnOutsideDismiss, complete]
+    [
+      tipIds,
+      completed,
+      enabled,
+      showsCloseButton,
+      dismissOnOutsidePress,
+      invalidateOnOutsideDismiss,
+      complete,
+    ]
   );
 
   return (

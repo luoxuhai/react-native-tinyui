@@ -61,6 +61,9 @@ describe('TipKit.Group', () => {
     const second = () => root.root.findByType(NativeTipPopoverView).props;
     expect(first().enabled).toBe(true);
     expect(second().enabled).toBe(false);
+    expect(first().showsCloseButton).toBe(true);
+    expect(second().showsCloseButton).toBe(true);
+    expect(second().dismissOnOutsidePress).toBe(true);
     expect(second().invalidateOnOutsideDismiss).toBe(false);
     invalidated(first(), 'stale-id');
     expect(first().enabled).toBe(true);
@@ -103,13 +106,18 @@ describe('TipKit.Group', () => {
   it('inherits outside-dismiss behavior and lets a popover opt out', () => {
     const onInvalidated = jest.fn();
     const root = mount(
-      <TipKit.Group tipIds={['one', 'two']} invalidateOnOutsideDismiss>
+      <TipKit.Group
+        tipIds={['one', 'two']}
+        dismissOnOutsidePress={false}
+        invalidateOnOutsideDismiss
+      >
         <TipKit.Popover tipId="one" title="One" onInvalidated={onInvalidated}>
           <Text>One</Text>
         </TipKit.Popover>
         <TipKit.Popover
           tipId="two"
           title="Two"
+          dismissOnOutsidePress
           invalidateOnOutsideDismiss={false}
         >
           <Text>Two</Text>
@@ -117,12 +125,65 @@ describe('TipKit.Group', () => {
       </TipKit.Group>
     );
     const tips = () => root.root.findAllByType(NativeTipPopoverView);
+    expect(tips()[0]!.props.dismissOnOutsidePress).toBe(false);
+    expect(tips()[1]!.props.dismissOnOutsidePress).toBe(true);
     expect(tips()[0]!.props.invalidateOnOutsideDismiss).toBe(true);
     expect(tips()[1]!.props.invalidateOnOutsideDismiss).toBe(false);
     invalidated(tips()[0]!.props);
     expect(onInvalidated).toHaveBeenCalledWith({ reason: 'tipClosed' });
     expect(tips()[1]!.props.enabled).toBe(true);
   });
+
+  it.each([true, false])(
+    'inherits and updates close-button visibility (%s) with member overrides',
+    (showsCloseButton) => {
+      const element = (visible: boolean) => (
+        <TipKit.Group
+          tipIds={['one', 'two', 'three', 'four']}
+          showsCloseButton={visible}
+        >
+          <TipKit.View tipId="one" title="One" />
+          <TipKit.View
+            tipId="two"
+            title="Two"
+            showsCloseButton={!showsCloseButton}
+          />
+          <TipKit.Popover tipId="three" title="Three">
+            <Text>Three</Text>
+          </TipKit.Popover>
+          <TipKit.Popover
+            tipId="four"
+            title="Four"
+            showsCloseButton={!showsCloseButton}
+          >
+            <Text>Four</Text>
+          </TipKit.Popover>
+        </TipKit.Group>
+      );
+      const root = mount(element(showsCloseButton));
+      const visibility = () =>
+        [NativeTipView, NativeTipPopoverView].map((component) =>
+          root.root
+            .findAllByType(component)
+            .map((tip) => tip.props.showsCloseButton)
+        );
+      expect(visibility()).toEqual([
+        [showsCloseButton, !showsCloseButton],
+        [showsCloseButton, !showsCloseButton],
+      ]);
+      act(() => root.update(element(!showsCloseButton)));
+      expect(visibility()).toEqual([
+        [!showsCloseButton, !showsCloseButton],
+        [!showsCloseButton, !showsCloseButton],
+      ]);
+      expect(root.root.findAllByType(NativeTipView)[0]!.props.enabled).toBe(
+        true
+      );
+      expect(
+        root.root.findAllByType(NativeTipPopoverView)[0]!.props.enabled
+      ).toBe(false);
+    }
+  );
 
   it('does not skip an explicitly disabled member or enable an unrelated nested group', () => {
     const root = mount(

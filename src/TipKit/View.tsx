@@ -21,6 +21,7 @@ export const View = forwardRef<
     systemImage,
     actions,
     enabled = true,
+    showsCloseButton = group?.showsCloseButton ?? true,
     maxDisplayCount,
     ignoresDisplayFrequency = false,
     arrowEdge = 'none',
@@ -41,6 +42,7 @@ export const View = forwardRef<
       message={message}
       systemImage={systemImage}
       actions={actions}
+      showsCloseButton={showsCloseButton}
       enabled={
         enabled && (!group || (group.enabled && group.currentTipId === tipId))
       }

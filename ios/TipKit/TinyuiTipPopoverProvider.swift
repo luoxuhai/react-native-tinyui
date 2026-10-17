@@ -19,6 +19,7 @@ import UIKit
   }
   private var tip: TinyuiTip?
   private var enabled = false
+  private let styleOptions = TinyuiTipStyleOptions()
   private var arrowEdge = "auto"
   private var observation: Task<Void, Never>?
   private var shouldDisplay = false
@@ -27,6 +28,7 @@ import UIKit
   private var presentedTipId: String?
   private var isPresenting = false
   private var isDismissing = false
+  private var dismissOnOutsidePress = true
   private var invalidateOnOutsideDismiss = false
   private var pendingInvalidation: (tipId: String, reason: String)?
 
@@ -44,7 +46,13 @@ import UIKit
     }
     tip = nextTip
     self.enabled = enabled
+    let nextShowsCloseButton = configuration["showsCloseButton"] as? Bool ?? true
+    if styleOptions.showsCloseButton != nextShowsCloseButton {
+      styleOptions.showsCloseButton = nextShowsCloseButton
+    }
     self.arrowEdge = arrowEdge
+    dismissOnOutsidePress = configuration["dismissOnOutsidePress"] as? Bool ?? true
+    controller?.isModalInPresentation = !dismissOnOutsidePress
     invalidateOnOutsideDismiss = configuration["invalidateOnOutsideDismiss"] as? Bool ?? false
     // Validate changed options even when an observation is already running.
     do {
@@ -119,19 +127,21 @@ import UIKit
       finishDismissal(controller)
       return
     }
-    guard enabled, window != nil, let tip, shouldDisplay,
+    guard enabled, window != nil, !bounds.isEmpty, let tip, shouldDisplay,
           presentedTipId == nil || presentedTipId == tip.id else {
       dismissTip()
       return
     }
-    // Like Tipster's TipPresenter, only present when the host is free.
-    guard controller == nil, let presenter = availablePresenter() else { return }
+    guard controller == nil, case .available = tip.status,
+          let presenter = availablePresenter() else { return }
     let tipController = TipUIPopoverViewController(tip, sourceItem: self) { [weak self] action in
       guard let self, self.tip?.id == tip.id,
             let content = tip.actionContents.first(where: { $0.id == action.id }) else { return }
       self.delegate?.onTipAction(tipId: tip.id, id: content.id, title: content.title)
     }
     tipController.presentationDelegate = self
+    tipController.isModalInPresentation = !dismissOnOutsidePress
+    tipController.viewStyle = TinyuiTipContentStyle(options: styleOptions)
     controller = tipController
     presentedTipId = tip.id
     configureArrow()
@@ -202,7 +212,7 @@ import UIKit
   public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
     guard let controller, presentationController.presentedViewController === controller else { return }
     let dismissedTip = presentedTipId == tip?.id ? tip : nil
-    let shouldInvalidate = invalidateOnOutsideDismiss && !isDismissing
+    let shouldInvalidate = dismissOnOutsidePress && invalidateOnOutsideDismiss && !isDismissing
     finishDismissal(controller)
     // Programmatic hiding, navigation and recycling do not complete a tip.
     if shouldInvalidate, let dismissedTip, case .available = dismissedTip.status {
@@ -222,9 +232,11 @@ import UIKit
 
   @objc public func reset() {
     enabled = false
+    styleOptions.showsCloseButton = true
     tip = nil
     lastError = nil
     pendingInvalidation = nil
+    dismissOnOutsidePress = true
     invalidateOnOutsideDismiss = false
     stop()
     parentViewController = nil

@@ -21,6 +21,7 @@ export function TipKitScreen() {
   const [ready, setReady] = useState(false);
   const [inline, setInline] = useState(true);
   const [enabled, setEnabled] = useState(true);
+  const [showsCloseButton, setShowsCloseButton] = useState(true);
   const [saved, setSaved] = useState(false);
   const [tipId, setTipId] = useState('tinyui.example.favorite.v1');
   const [error, setError] = useState('');
@@ -66,6 +67,7 @@ export function TipKitScreen() {
     ],
     maxDisplayCount: 3,
     enabled: enabled && isFocused && !saved,
+    showsCloseButton,
     onActionPress: ({ id }: TipAction) => {
       if (id === 'save') save();
       if (id === 'not-now') setEnabled(false);
@@ -110,6 +112,16 @@ export function TipKitScreen() {
           value={inline}
           onValueChange={setInline}
           testID="tip-inline-mode"
+        />
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Show close button</Text>
+        <Switch
+          accessibilityLabel="Show close button"
+          value={showsCloseButton}
+          onValueChange={setShowsCloseButton}
+          testID="tip-close-button"
         />
       </View>
 

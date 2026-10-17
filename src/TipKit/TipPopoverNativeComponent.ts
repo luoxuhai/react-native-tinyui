@@ -12,6 +12,8 @@ export interface NativeTipPopoverProps extends ViewProps {
   systemImage?: string;
   actions?: ReadonlyArray<Readonly<{ id: string; title: string }>>;
   enabled?: boolean;
+  showsCloseButton?: CodegenTypes.WithDefault<boolean, true>;
+  dismissOnOutsidePress?: CodegenTypes.WithDefault<boolean, true>;
   invalidateOnOutsideDismiss?: boolean;
   maxDisplayCount?: CodegenTypes.Int32;
   ignoresDisplayFrequency?: boolean;
