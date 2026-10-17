@@ -1,7 +1,7 @@
 {
   "name": "react-native-tinyui",
   "version": "3.3.0",
-  "description": "Dependency-free native iOS Menu, SwipeActions, Popover, TipKit, Stepper, ConcentricView, SFSymbol and LiquidGlassText components for React Native",
+  "description": "Dependency-free native iOS Menu, SwipeActions, Popover, TipKit, Stepper, ConcentricView, MediaView, SFSymbol and LiquidGlassText components for React Native",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
@@ -34,6 +34,11 @@
       "react-native-tinyui-source": "./src/ConcentricView/index.tsx",
       "types": "./lib/typescript/src/ConcentricView/index.d.ts",
       "default": "./lib/module/ConcentricView/index.js"
+    },
+    "./media-view": {
+      "react-native-tinyui-source": "./src/MediaView/index.tsx",
+      "types": "./lib/typescript/src/MediaView/index.d.ts",
+      "default": "./lib/module/MediaView/index.js"
     },
     "./sf-symbol": {
       "react-native-tinyui-source": "./src/SFSymbol/index.tsx",
@@ -78,6 +83,10 @@
     "menu",
     "popover",
     "stepper",
+    "media-view",
+    "image",
+    "video",
+    "avif",
     "fabric",
     "liquid-glass"
   ],
@@ -174,6 +183,9 @@
         },
         "TinyuiConcentricView": {
           "className": "TinyuiConcentricView"
+        },
+        "TinyuiMediaView": {
+          "className": "TinyuiMediaView"
         },
         "TinyuiSFSymbolView": {
           "className": "TinyuiSFSymbolView"

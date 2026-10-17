@@ -11,6 +11,7 @@ staying close to native APIs. It uses UIKit by default and SwiftUI where needed.
 | Component                          | What it does                                                   |
 | ---------------------------------- | -------------------------------------------------------------- |
 | [Menu](#menu)                      | Present native menus with actions, submenus, and sections       |
+| [MediaView](#mediaview)             | Display native images, including AVIF, and looping muted videos |
 | [SwipeActions](#swipeactions)      | Reveal native action buttons by swiping React Native rows      |
 | [Popover](#popover)                | Show interactive React Native content in a native popover      |
 | [TipKit](#tipkit)                  | Present contextual tips using Apple's TipKit framework         |
@@ -76,6 +77,7 @@ use in your app's `package.json`:
 Available components:
 
 - `Menu`
+- `MediaView`
 - `SwipeActions`
 - `Popover`
 - `LiquidGlassText`
@@ -109,6 +111,7 @@ Component-specific JavaScript entry points are also available:
 
 ```tsx
 import { Menu } from 'react-native-tinyui/menu';
+import { MediaView } from 'react-native-tinyui/media-view';
 import { SwipeActions } from 'react-native-tinyui/swipe-actions';
 import { Popover } from 'react-native-tinyui/popover';
 import { LiquidGlassText } from 'react-native-tinyui/liquid-glass-text';
@@ -223,6 +226,88 @@ semantic iOS colors. UIKit doesn't expose custom menu title colors, so the
 deprecated `titleColor` field is retained only for source compatibility; use
 `destructive` for system red styling. Submenus support the same label fields
 plus `destructive`, `disabled`, `hidden`, and `displayInline`.
+
+## MediaView
+
+`MediaView` displays images with `UIImageView` and plays videos with
+`AVQueuePlayer` and `AVPlayerLayer`. It supports local `require()` assets and
+remote URIs, including AVIF images decoded by iOS. Videos start automatically,
+loop, and play muted. No additional dependencies are required.
+
+```tsx
+import { MediaView } from 'react-native-tinyui';
+
+// Bundled image
+<MediaView
+  source={require('./assets/photo.avif')}
+  resizeMode="contain"
+  style={{ width: 300, height: 300 }}
+  onError={({ nativeEvent }) => console.warn(nativeEvent.error)}
+/>;
+
+// Remote video, detected from the URI's file extension
+<MediaView
+  source={{ uri: 'https://example.com/clip.mp4' }}
+  resizeMode="cover"
+  style={{ width: '100%', aspectRatio: 16 / 9 }}
+/>;
+```
+
+The component-specific entry point also provides a default export:
+
+```tsx
+import MediaView, {
+  type MediaViewProps,
+  type ResizeMode,
+} from 'react-native-tinyui/media-view';
+```
+
+| Prop | Description | Default |
+| --- | --- | --- |
+| `source` | Required `require()` asset or `{ uri: string }` | — |
+| `resizeMode` | `contain`, `cover`, `stretch`, or `center` | `contain` |
+| `onLoadStart` | Called when loading begins | — |
+| `onLoad` | Called when media is ready for display or playback | — |
+| `onLoadEnd` | Called when loading finishes, including failures | — |
+| `onError` | Receives `{ nativeEvent: { error: string } }` | — |
+
+Standard `ViewProps` and styles are supported. Give the view a width and height,
+or an aspect ratio. `center` uses an image's natural size; videos use aspect fit.
+The URI's extension selects image loading or video playback; supported codecs
+depend on iOS. Playback controls, audio, and imperative playback methods are not
+exposed.
+
+For bundled AVIF images, add `avif` to Metro's asset extensions:
+
+```js
+const { getDefaultConfig } = require('@react-native/metro-config');
+
+const config = getDefaultConfig(__dirname);
+config.resolver.assetExts = [...new Set([...config.resolver.assetExts, 'avif'])];
+
+module.exports = config;
+```
+
+### Migrating from `react-native-media-view`
+
+Replace the `react-native-media-view` dependency with `react-native-tinyui` and
+update imports:
+
+```tsx
+// Before
+import { MediaView } from 'react-native-media-view';
+
+// After
+import { MediaView } from 'react-native-tinyui/media-view';
+```
+
+Existing `source`, `resizeMode`, and lifecycle event props are preserved. The
+`MediaViewProps`, `MediaSourceProps`, `ResizeMode`, and `MediaViewComponent` types
+remain available from both the root and component entry points. The deprecated
+`ContentMode` alias remains available; use `ResizeMode` for new code.
+If you configure `react-native-tinyui.components`, add `MediaView` to the list,
+then run `pod install`. TinyUI's iOS 17+ requirement applies after migration.
+Keep your existing AVIF Metro configuration.
 
 ## SwipeActions
 
@@ -914,9 +999,10 @@ visibility state changes apply instantly. Set it to `false` to opt out.
 
 ## Example App
 
-The [example app](example/src/App.tsx) demonstrates Menu, SwipeActions, Popover, TipKit,
-LiquidGlassText, Stepper, ConcentricView, and SFSymbol. It includes all native
-components, so building it requires Xcode 26+. Use iOS 26+ to try the glass effects
+The [example app](example/src/App.tsx) demonstrates Menu, MediaView, SwipeActions,
+Popover, TipKit, LiquidGlassText, Stepper, ConcentricView, and SFSymbol. The
+MediaView playground includes bundled AVIF and MP4 samples. The app includes all
+native components, so building it requires Xcode 26+. Use iOS 26+ to try the glass effects
 and the latest SF Symbol features.
 
 From the repository root, install the dependencies:

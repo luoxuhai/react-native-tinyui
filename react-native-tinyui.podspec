@@ -44,6 +44,11 @@ components = {
     :definition => "TINYUI_FEATURE_TIP_KIT=1",
     :frameworks => ["UIKit", "SwiftUI", "TipKit"],
   },
+  "MediaView" => {
+    :source_files => "ios/MediaView/**/*.{h,m,mm,swift,cpp}",
+    :definition => "TINYUI_FEATURE_MEDIA_VIEW=1",
+    :frameworks => ["UIKit", "AVFoundation", "AVKit"],
+  },
 }
 
 configured_components = nil
@@ -105,7 +110,7 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/luoxuhai/react-native-tinyui.git", :tag => "#{s.version}" }
 
   s.source_files = source_files
-  s.private_header_files = ["ios/Core/**/*.h", "ios/Menu/**/*.h", "ios/SwipeActions/**/*.h", "ios/Popover/**/*.h", "ios/LiquidGlassText/**/*.h", "ios/Stepper/**/*.h", "ios/ConcentricView/**/*.h", "ios/SFSymbol/**/*.h", "ios/TipKit/**/*.h"]
+  s.private_header_files = ["ios/Core/**/*.h", "ios/Menu/**/*.h", "ios/SwipeActions/**/*.h", "ios/Popover/**/*.h", "ios/LiquidGlassText/**/*.h", "ios/Stepper/**/*.h", "ios/ConcentricView/**/*.h", "ios/SFSymbol/**/*.h", "ios/TipKit/**/*.h", "ios/MediaView/**/*.h"]
   s.preserve_paths = "ios/LiquidGlassText/GlassText-LICENSE"
   s.swift_version = "5.0"
   s.frameworks = frameworks unless frameworks.empty?

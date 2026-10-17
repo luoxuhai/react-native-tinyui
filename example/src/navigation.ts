@@ -9,4 +9,5 @@ export type RootStackParamList = {
   ConcentricView: undefined;
   SFSymbol: undefined;
   LiquidGlassText: undefined;
+  MediaView: undefined;
 };

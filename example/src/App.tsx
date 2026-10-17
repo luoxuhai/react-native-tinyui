@@ -7,6 +7,7 @@ import { ComponentListScreen } from './screens/ComponentListScreen';
 import { ConcentricViewScreen } from './screens/ConcentricViewScreen';
 import { LiquidGlassTextScreen } from './screens/LiquidGlassTextScreen';
 import { MenuScreen } from './screens/MenuScreen';
+import { MediaViewScreen } from './screens/MediaViewScreen';
 import { SwipeActionsScreen } from './screens/SwipeActionsScreen';
 import { PopoverScreen } from './screens/PopoverScreen';
 import { StepperScreen } from './screens/StepperScreen';
@@ -32,6 +33,11 @@ export default function App() {
             options={{ title: 'TinyUI' }}
           />
           <Stack.Screen component={MenuScreen} name="Menu" />
+          <Stack.Screen
+            component={MediaViewScreen}
+            name="MediaView"
+            options={{ title: 'Media View' }}
+          />
           <Stack.Screen
             component={SwipeActionsScreen}
             name="SwipeActions"

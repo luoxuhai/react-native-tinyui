@@ -67,6 +67,12 @@ TINYUI_DISABLED_COMPONENT(TinyuiTipPopoverView, TinyuiTipPopoverViewComponentDes
 TINYUI_DISABLED_COMPONENT(TinyuiTipView, TinyuiTipViewComponentDescriptor)
 #endif
 
+#if TINYUI_FEATURE_MEDIA_VIEW
+#import "TinyuiMediaView.h"
+#else
+TINYUI_DISABLED_COMPONENT(TinyuiMediaView, TinyuiMediaViewComponentDescriptor)
+#endif
+
 #undef TINYUI_DISABLED_COMPONENT
 
 Class<RCTComponentViewProtocol> TinyuiMenuViewCls(void)
@@ -112,4 +118,9 @@ Class<RCTComponentViewProtocol> TinyuiTipPopoverViewCls(void)
 Class<RCTComponentViewProtocol> TinyuiTipViewCls(void)
 {
   return TinyuiTipView.class;
+}
+
+Class<RCTComponentViewProtocol> TinyuiMediaViewCls(void)
+{
+  return TinyuiMediaView.class;
 }

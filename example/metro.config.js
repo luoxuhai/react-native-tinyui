@@ -18,6 +18,10 @@ const config = withMetroConfig(getDefaultConfig(__dirname), {
 
 module.exports = {
   ...config,
+  resolver: {
+    ...config.resolver,
+    assetExts: [...new Set([...config.resolver.assetExts, 'avif'])],
+  },
   server: {
     ...config.server,
     port: 8082,

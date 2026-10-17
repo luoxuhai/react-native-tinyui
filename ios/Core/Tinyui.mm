@@ -34,6 +34,9 @@
 #if TINYUI_FEATURE_TIP_KIT
   [components addObject:@"TipKit"];
 #endif
+#if TINYUI_FEATURE_MEDIA_VIEW
+  [components addObject:@"MediaView"];
+#endif
 
   return components;
 }

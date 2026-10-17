@@ -37,6 +37,15 @@ export type { StepperProps } from './Stepper';
 export { ConcentricView } from './ConcentricView';
 export type { ConcentricViewProps } from './ConcentricView';
 
+export { MediaView } from './MediaView';
+export type {
+  ContentMode,
+  MediaSourceProps,
+  MediaViewComponent,
+  MediaViewProps,
+  ResizeMode,
+} from './MediaView';
+
 export { SFSymbol } from './SFSymbol';
 export type {
   SFSymbolContentTransition,

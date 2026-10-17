@@ -7,6 +7,7 @@ export type TinyuiComponent =
   | 'LiquidGlassText'
   | 'Stepper'
   | 'ConcentricView'
+  | 'MediaView'
   | 'SFSymbol'
   | 'TipKit';
 

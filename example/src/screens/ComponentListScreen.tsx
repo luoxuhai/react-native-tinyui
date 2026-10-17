@@ -14,6 +14,12 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Components'>;
 
 const components = [
   {
+    description: 'Native AVIF images and muted, looping video playback.',
+    glyph: '▶',
+    route: 'MediaView',
+    title: 'Media View',
+  },
+  {
     description: 'Native row actions with leading, trailing and full swipes.',
     glyph: '↔',
     route: 'SwipeActions',
