@@ -46,6 +46,11 @@ import UIKit
   /// Keep it separate from the presentation controller's UIKit layout.
   @objc public var contentSize: CGSize = .zero {
     didSet {
+      // A Fabric commit can reapply the trigger-relative origin without changing size.
+      if let contentView, let presentedViewController,
+        contentView.superview === presentedViewController.view {
+        contentView.frame.origin = .zero
+      }
       guard oldValue != contentSize else { return }
       schedulePresentationUpdate()
     }
@@ -180,6 +185,9 @@ import UIKit
     // Fabric owns the content frame. Stretching it to the popover's bounds
     // would overwrite the measured size and feed it back into presentation.
     contentView.autoresizingMask = []
+    // Yoga positions this wrapper relative to the trigger. Once reparented
+    // into the popover, keep its measured size and use the popover's origin.
+    contentView.frame.origin = .zero
     viewController.view.addSubview(contentView)
   }
 
